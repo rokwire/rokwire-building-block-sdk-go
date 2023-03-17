@@ -17,8 +17,8 @@ Follow the steps below to upgrade to the associated version of this library. Not
 ## Packages
 This library contains several packages:
 
-### `authservice`
-The `authservice` package provides the `AuthService` type which contains the configurations to locate and communicate with the ROKWIRE Auth Service. The other packages in this library depend on the `AuthService` object, or other objects which depend on it, to handle any necessary communication with this central Auth Service.
+### `auth`
+The `auth` package provides the `AuthService` type which contains the configurations to locate and communicate with the ROKWIRE Auth Service. The other packages in this library depend on the `AuthService` object, or other objects which depend on it, to handle any necessary communication with this central Auth Service.
 
 This package also provides the `ServiceRegLoader`, `ServiceRegManager`, `ServiceAccountLoader`, and `ServiceAccountManager` types.
 

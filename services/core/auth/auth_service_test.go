@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package authservice_test
+package auth_test
 
 import (
 	"errors"
@@ -20,13 +20,13 @@ import (
 	"testing"
 
 	"github.com/rokwire/rokwire-sdk-go/internal/testutils"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/authservice"
+	"github.com/rokwire/rokwire-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-sdk-go/services/core/auth/keys"
 	"github.com/rokwire/rokwire-sdk-go/utils/rokwireutils"
 )
 
-func setupSampleServiceRegSubscriptions() *authservice.ServiceRegSubscriptions {
-	return authservice.NewServiceRegSubscriptions([]string{"auth", "test"})
+func setupSampleServiceRegSubscriptions() *auth.ServiceRegSubscriptions {
+	return auth.NewServiceRegSubscriptions([]string{"auth", "test"})
 }
 
 func TestServiceRegManager_GetServiceReg(t *testing.T) {
@@ -37,10 +37,10 @@ func TestServiceRegManager_GetServiceReg(t *testing.T) {
 	}
 
 	authService := testutils.SetupTestAuthService("test", "https://test.rokwire.com")
-	testServiceReg := authservice.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", authService.ServiceHost, nil}
-	authServiceReg := authservice.ServiceReg{"auth", "6050ec62-d552-4fed-b11f-15a01bb1afc1", "https://auth.rokwire.com", authPubKey}
+	testServiceReg := auth.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", authService.ServiceHost, nil}
+	authServiceReg := auth.ServiceReg{"auth", "6050ec62-d552-4fed-b11f-15a01bb1afc1", "https://auth.rokwire.com", authPubKey}
 
-	serviceRegs := []authservice.ServiceReg{authServiceReg, testServiceReg}
+	serviceRegs := []auth.ServiceReg{authServiceReg, testServiceReg}
 	subscribed := []string{"auth"}
 
 	type args struct {
@@ -49,7 +49,7 @@ func TestServiceRegManager_GetServiceReg(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *authservice.ServiceReg
+		want    *auth.ServiceReg
 		wantErr bool
 	}{
 		{"return reg when found by serviceID", args{"auth"}, &authServiceReg, false},
@@ -83,10 +83,10 @@ func TestServiceRegManager_GetServiceRegWithPubKey(t *testing.T) {
 	}
 
 	authService := testutils.SetupTestAuthService("test", "https://test.rokwire.com")
-	testServiceReg := authservice.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", authService.ServiceHost, nil}
-	authServiceReg := authservice.ServiceReg{"auth", "6050ec62-d552-4fed-b11f-15a01bb1afc1", "https://auth.rokwire.com", authPubKey}
+	testServiceReg := auth.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", authService.ServiceHost, nil}
+	authServiceReg := auth.ServiceReg{"auth", "6050ec62-d552-4fed-b11f-15a01bb1afc1", "https://auth.rokwire.com", authPubKey}
 
-	serviceRegs := []authservice.ServiceReg{authServiceReg, testServiceReg}
+	serviceRegs := []auth.ServiceReg{authServiceReg, testServiceReg}
 	subscribed := []string{"auth"}
 
 	type args struct {
@@ -95,7 +95,7 @@ func TestServiceRegManager_GetServiceRegWithPubKey(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *authservice.ServiceReg
+		want    *auth.ServiceReg
 		wantErr bool
 	}{
 		{"return reg when found by serviceID and key valid", args{"auth"}, &authServiceReg, false},
@@ -124,9 +124,9 @@ func TestServiceRegManager_GetServiceRegWithPubKey(t *testing.T) {
 
 func TestServiceRegManager_SubscribeServices(t *testing.T) {
 	authService := testutils.SetupTestAuthService("test", "https://test.rokwire.com")
-	testServiceReg := authservice.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", authService.ServiceHost, nil}
-	authServiceReg := authservice.ServiceReg{"auth", "6050ec62-d552-4fed-b11f-15a01bb1afc1", "https://auth.rokwire.com", nil}
-	serviceRegs := []authservice.ServiceReg{authServiceReg, testServiceReg}
+	testServiceReg := auth.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", authService.ServiceHost, nil}
+	authServiceReg := auth.ServiceReg{"auth", "6050ec62-d552-4fed-b11f-15a01bb1afc1", "https://auth.rokwire.com", nil}
+	serviceRegs := []auth.ServiceReg{authServiceReg, testServiceReg}
 	subscribed := []string{"auth"}
 
 	type args struct {
@@ -169,18 +169,18 @@ func TestServiceRegManager_SubscribeServices(t *testing.T) {
 
 func TestServiceRegManager_ValidateServiceRegistration(t *testing.T) {
 	authService := testutils.SetupTestAuthService("test", "https://test.rokwire.com")
-	testServiceReg := authservice.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", authService.ServiceHost, nil}
-	test2ServiceReg := authservice.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", "https://test2.rokwire.com", nil}
-	authServiceReg := authservice.ServiceReg{"auth", "6050ec62-d552-4fed-b11f-15a01bb1afc1", "https://auth.rokwire.com", nil}
+	testServiceReg := auth.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", authService.ServiceHost, nil}
+	test2ServiceReg := auth.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", "https://test2.rokwire.com", nil}
+	authServiceReg := auth.ServiceReg{"auth", "6050ec62-d552-4fed-b11f-15a01bb1afc1", "https://auth.rokwire.com", nil}
 
-	serviceRegsValid := []authservice.ServiceReg{authServiceReg, testServiceReg}
-	serviceRegsMissing := []authservice.ServiceReg{authServiceReg}
-	serviceRegsInvalid := []authservice.ServiceReg{authServiceReg, test2ServiceReg}
+	serviceRegsValid := []auth.ServiceReg{authServiceReg, testServiceReg}
+	serviceRegsMissing := []auth.ServiceReg{authServiceReg}
+	serviceRegsInvalid := []auth.ServiceReg{authServiceReg, test2ServiceReg}
 	subscribed := []string{"auth"}
 
 	tests := []struct {
 		name             string
-		loadServicesResp []authservice.ServiceReg
+		loadServicesResp []auth.ServiceReg
 		wantErr          bool
 	}{
 		{"no error on registration found", serviceRegsValid, false},
@@ -215,16 +215,16 @@ func TestAuthService_ValidateServiceRegistrationKey(t *testing.T) {
 	}
 
 	authService := testutils.SetupTestAuthService("test", "https://test.rokwire.com")
-	testServiceReg := authservice.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", authService.ServiceHost, pubKey}
-	testServiceRegNoKey := authservice.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", authService.ServiceHost, nil}
-	testServiceRegWrongKey := authservice.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", authService.ServiceHost, wrongKey}
+	testServiceReg := auth.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", authService.ServiceHost, pubKey}
+	testServiceRegNoKey := auth.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", authService.ServiceHost, nil}
+	testServiceRegWrongKey := auth.ServiceReg{authService.ServiceID, "dec8d277-b775-47a2-b7b0-ce8482871b67", authService.ServiceHost, wrongKey}
 
-	authServiceReg := authservice.ServiceReg{"auth", "6050ec62-d552-4fed-b11f-15a01bb1afc1", "https://auth.rokwire.com", nil}
+	authServiceReg := auth.ServiceReg{"auth", "6050ec62-d552-4fed-b11f-15a01bb1afc1", "https://auth.rokwire.com", nil}
 
-	serviceRegsValid := []authservice.ServiceReg{authServiceReg, testServiceReg}
-	serviceRegsMissing := []authservice.ServiceReg{authServiceReg}
-	serviceRegsNoKey := []authservice.ServiceReg{authServiceReg, testServiceRegNoKey}
-	serviceRegsWrongKey := []authservice.ServiceReg{authServiceReg, testServiceRegWrongKey}
+	serviceRegsValid := []auth.ServiceReg{authServiceReg, testServiceReg}
+	serviceRegsMissing := []auth.ServiceReg{authServiceReg}
+	serviceRegsNoKey := []auth.ServiceReg{authServiceReg, testServiceRegNoKey}
+	serviceRegsWrongKey := []auth.ServiceReg{authServiceReg, testServiceRegWrongKey}
 
 	subscribed := []string{"auth"}
 
@@ -240,7 +240,7 @@ func TestAuthService_ValidateServiceRegistrationKey(t *testing.T) {
 	tests := []struct {
 		name             string
 		args             args
-		loadServicesResp []authservice.ServiceReg
+		loadServicesResp []auth.ServiceReg
 		wantErr          bool
 	}{
 		{"no error on registration found", args{privKey}, serviceRegsValid, false},
@@ -321,7 +321,7 @@ func TestServiceAccountManager_GetAccessToken(t *testing.T) {
 	type args struct {
 		appID string
 		orgID string
-		token *authservice.AccessToken
+		token *auth.AccessToken
 		err   error
 
 		readAppID string
@@ -334,8 +334,8 @@ func TestServiceAccountManager_GetAccessToken(t *testing.T) {
 		wantLoadErr bool
 		wantReadErr bool
 	}{
-		{"successfully read stored token", args{"4f684d01-8a8c-4674-9005-942c16136ab6", "8a145f9e-bb5d-4f4c-8af0-a43527c05d16", &authservice.AccessToken{Token: "sample_token", TokenType: "Bearer"}, nil, "4f684d01-8a8c-4674-9005-942c16136ab6", "8a145f9e-bb5d-4f4c-8af0-a43527c05d16"}, "Bearer sample_token", false, false},
-		{"attempt to read unknown token", args{"9b25622b-e559-4824-9ea7-535c8b990725", "c83338f7-5fe9-47ac-b432-22fb987eb9f7", &authservice.AccessToken{Token: "sample_token", TokenType: "Bearer"}, nil, "4f684d01-8a8c-4674-9005-942c16136ab6", "8a145f9e-bb5d-4f4c-8af0-a43527c05d16"}, "", false, true},
+		{"successfully read stored token", args{"4f684d01-8a8c-4674-9005-942c16136ab6", "8a145f9e-bb5d-4f4c-8af0-a43527c05d16", &auth.AccessToken{Token: "sample_token", TokenType: "Bearer"}, nil, "4f684d01-8a8c-4674-9005-942c16136ab6", "8a145f9e-bb5d-4f4c-8af0-a43527c05d16"}, "Bearer sample_token", false, false},
+		{"attempt to read unknown token", args{"9b25622b-e559-4824-9ea7-535c8b990725", "c83338f7-5fe9-47ac-b432-22fb987eb9f7", &auth.AccessToken{Token: "sample_token", TokenType: "Bearer"}, nil, "4f684d01-8a8c-4674-9005-942c16136ab6", "8a145f9e-bb5d-4f4c-8af0-a43527c05d16"}, "", false, true},
 		{"loading error", args{"4f684d01-8a8c-4674-9005-942c16136ab6", "8a145f9e-bb5d-4f4c-8af0-a43527c05d16", nil, errors.New("loading error"), "4f684d01-8a8c-4674-9005-942c16136ab6", "8a145f9e-bb5d-4f4c-8af0-a43527c05d16"}, "", true, true},
 	}
 	for _, tt := range tests {
@@ -348,7 +348,7 @@ func TestServiceAccountManager_GetAccessToken(t *testing.T) {
 				t.Errorf("ServiceAccountManager.GetAccessToken() err = %v, wantLoadErr %v", err, tt.wantLoadErr)
 			}
 
-			stored := mockManager.AccessTokens()[authservice.AppOrgPair{AppID: tt.args.readAppID, OrgID: tt.args.readOrgID}]
+			stored := mockManager.AccessTokens()[auth.AppOrgPair{AppID: tt.args.readAppID, OrgID: tt.args.readOrgID}]
 			if tt.wantReadErr != (stored.String() == "") {
 				t.Errorf("ServiceAccountManager.GetAccessToken() err = %v, wantReadErr %v", err, tt.wantReadErr)
 			} else if !tt.wantReadErr && (got.String() != stored.String()) {
@@ -359,7 +359,7 @@ func TestServiceAccountManager_GetAccessToken(t *testing.T) {
 }
 
 func TestServiceAccountManager_GetAccessTokens(t *testing.T) {
-	tokens := map[authservice.AppOrgPair]authservice.AccessToken{
+	tokens := map[auth.AppOrgPair]auth.AccessToken{
 		{AppID: rokwireutils.AllApps, OrgID: "0716d801-ee13-4428-b10b-e52c6d989dcc"}:                   {Token: "all_apps_token", TokenType: "Bearer"},
 		{AppID: "4f684d01-8a8c-4674-9005-942c16136ab6", OrgID: "8a145f9e-bb5d-4f4c-8af0-a43527c05d16"}: {Token: "specific_token", TokenType: "Bearer"},
 	}
@@ -369,7 +369,7 @@ func TestServiceAccountManager_GetAccessTokens(t *testing.T) {
 	type args struct {
 		appID  string
 		orgID  string
-		tokens map[authservice.AppOrgPair]authservice.AccessToken
+		tokens map[auth.AppOrgPair]auth.AccessToken
 		err    error
 	}
 	tests := []struct {
@@ -393,8 +393,8 @@ func TestServiceAccountManager_GetAccessTokens(t *testing.T) {
 			if (err != nil) != tt.wantLoadErr {
 				t.Errorf("ServiceAccountManager.GetAccessTokens() err = %v, wantLoadErr %v", err, tt.wantLoadErr)
 			} else if !tt.wantLoadErr && tokens != nil {
-				got := tokens[authservice.AppOrgPair{AppID: tt.args.appID, OrgID: tt.args.orgID}]
-				stored := mockManager.AccessTokens()[authservice.AppOrgPair{AppID: tt.args.appID, OrgID: tt.args.orgID}]
+				got := tokens[auth.AppOrgPair{AppID: tt.args.appID, OrgID: tt.args.orgID}]
+				stored := mockManager.AccessTokens()[auth.AppOrgPair{AppID: tt.args.appID, OrgID: tt.args.orgID}]
 				if tt.wantReadErr != (stored.String() == "") {
 					t.Errorf("ServiceAccountManager.GetAccessTokens() err = %v, wantReadErr %v", err, tt.wantReadErr)
 				} else if !tt.wantReadErr && (got.String() != stored.String()) {
@@ -406,16 +406,16 @@ func TestServiceAccountManager_GetAccessTokens(t *testing.T) {
 }
 
 func TestServiceAccountManager_GetCachedAccessToken(t *testing.T) {
-	allAllTokens := map[authservice.AppOrgPair]authservice.AccessToken{
+	allAllTokens := map[auth.AppOrgPair]auth.AccessToken{
 		{AppID: rokwireutils.AllApps, OrgID: rokwireutils.AllOrgs}: {Token: "all_all_token", TokenType: "Bearer"},
 	}
-	allAppTokens := map[authservice.AppOrgPair]authservice.AccessToken{
+	allAppTokens := map[auth.AppOrgPair]auth.AccessToken{
 		{AppID: rokwireutils.AllApps, OrgID: "0716d801-ee13-4428-b10b-e52c6d989dcc"}: {Token: "all_apps_token", TokenType: "Bearer"},
 	}
-	allOrgTokens := map[authservice.AppOrgPair]authservice.AccessToken{
+	allOrgTokens := map[auth.AppOrgPair]auth.AccessToken{
 		{AppID: "83f0ed91-6e27-4101-8c44-c4d7e9115767", OrgID: rokwireutils.AllOrgs}: {Token: "all_orgs_token", TokenType: "Bearer"},
 	}
-	specificTokens := map[authservice.AppOrgPair]authservice.AccessToken{
+	specificTokens := map[auth.AppOrgPair]auth.AccessToken{
 		{AppID: "4f684d01-8a8c-4674-9005-942c16136ab6", OrgID: "8a145f9e-bb5d-4f4c-8af0-a43527c05d16"}: {Token: "specific_token", TokenType: "Bearer"},
 	}
 
@@ -424,7 +424,7 @@ func TestServiceAccountManager_GetCachedAccessToken(t *testing.T) {
 	type args struct {
 		appID  string
 		orgID  string
-		tokens map[authservice.AppOrgPair]authservice.AccessToken
+		tokens map[auth.AppOrgPair]auth.AccessToken
 	}
 	tests := []struct {
 		name      string

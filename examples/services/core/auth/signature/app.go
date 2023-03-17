@@ -23,7 +23,7 @@ import (
 	"net/http"
 
 	"github.com/rokwire/rokwire-sdk-go/internal/testutils"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/authservice"
+	"github.com/rokwire/rokwire-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-sdk-go/services/core/auth/keys"
 	"github.com/rokwire/rokwire-sdk-go/services/core/auth/sigauth"
 )
@@ -127,7 +127,7 @@ func main() {
 	services := []string{"auth"}
 
 	// Instantiate an AuthService to maintain basic auth data
-	authService := authservice.AuthService{
+	authService := auth.Service{
 		ServiceID:   "example",
 		ServiceHost: "http://localhost:5000",
 		FirstParty:  true,
@@ -135,13 +135,13 @@ func main() {
 	}
 
 	// Instantiate a remote ServiceRegLoader to load auth service registration records from auth service
-	serviceRegLoader, err := authservice.NewRemoteServiceRegLoader(&authService, services)
+	serviceRegLoader, err := auth.NewRemoteServiceRegLoader(&authService, services)
 	if err != nil {
 		log.Fatalf("Error initializing remote service registration loader: %v", err)
 	}
 
 	// Instantiate a ServiceRegManager to manage service registration records
-	serviceRegManager, err := authservice.NewServiceRegManager(&authService, serviceRegLoader, true)
+	serviceRegManager, err := auth.NewServiceRegManager(&authService, serviceRegLoader, true)
 	if err != nil {
 		log.Fatalf("Error initializing service registration manager: %v", err)
 	}
@@ -162,13 +162,13 @@ func main() {
 
 	// Instantiate a remote ServiceAccountLoader to load auth service account data from auth service
 	accountID := "0ba899ed-ac7a-11ec-b09f-00ffd2760de8"
-	serviceAccountLoader, err := authservice.NewRemoteServiceAccountLoader(&authService, accountID, signatureAuth)
+	serviceAccountLoader, err := auth.NewRemoteServiceAccountLoader(&authService, accountID, signatureAuth)
 	if err != nil {
 		log.Fatalf("Error initializing remote service account loader: %v", err)
 	}
 
 	// Instantiate a remote ServiceAccountManager to manage service account-related data
-	serviceAccountManager, err := authservice.NewServiceAccountManager(&authService, serviceAccountLoader)
+	serviceAccountManager, err := auth.NewServiceAccountManager(&authService, serviceAccountLoader)
 	if err != nil {
 		log.Fatalf("Error initializing service account manager: %v", err)
 	}

@@ -20,8 +20,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rokwire/rokwire-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-sdk-go/services/core/auth/authorization"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/authservice"
 	"github.com/rokwire/rokwire-sdk-go/services/core/auth/tokenauth"
 )
 
@@ -76,7 +76,7 @@ func NewWebAdapter(handlers tokenauth.Handlers) WebAdapter {
 
 func main() {
 	// Instantiate an AuthService to maintain basic auth data
-	authService := authservice.AuthService{
+	authService := auth.Service{
 		ServiceID:   "example",
 		ServiceHost: "http://localhost:5000",
 		FirstParty:  true,
@@ -84,13 +84,13 @@ func main() {
 	}
 
 	// Instantiate a remote ServiceRegLoader to load auth service registration record from auth service
-	serviceRegLoader, err := authservice.NewRemoteServiceRegLoader(&authService, []string{"auth"})
+	serviceRegLoader, err := auth.NewRemoteServiceRegLoader(&authService, []string{"auth"})
 	if err != nil {
 		log.Fatalf("Error initializing remote service registration loader: %v", err)
 	}
 
 	// Instantiate a ServiceRegManager to manage service registration records
-	serviceRegManager, err := authservice.NewServiceRegManager(&authService, serviceRegLoader, true)
+	serviceRegManager, err := auth.NewServiceRegManager(&authService, serviceRegLoader, true)
 	if err != nil {
 		log.Fatalf("Error initializing service registration manager: %v", err)
 	}

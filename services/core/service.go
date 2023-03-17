@@ -21,14 +21,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/authservice"
+	"github.com/rokwire/rokwire-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-sdk-go/utils/logging/logs"
 	"github.com/rokwire/rokwire-sdk-go/utils/rokwireutils"
 )
 
-// CoreService contains configurations and helper functions required to utilize certain core services
-type CoreService struct {
-	serviceAccountManager *authservice.ServiceAccountManager
+// Service contains configurations and helper functions required to utilize certain core services
+type Service struct {
+	serviceAccountManager *auth.ServiceAccountManager
 
 	deletedAccountsConfig *DeletedAccountsConfig
 
@@ -36,7 +36,7 @@ type CoreService struct {
 }
 
 // StartDeletedAccountsTimer starts a timer that periodically retrieves deleted account IDs
-func (c *CoreService) StartDeletedAccountsTimer() {
+func (c *Service) StartDeletedAccountsTimer() {
 	//cancel if active
 	if c.deletedAccountsConfig.timer != nil {
 		c.deletedAccountsConfig.timerDone <- true
@@ -46,7 +46,7 @@ func (c *CoreService) StartDeletedAccountsTimer() {
 	c.getDeletedAccountsWithCallback(c.deletedAccountsConfig.Callback)
 }
 
-func (c *CoreService) getDeletedAccountsWithCallback(callback func([]string) error) {
+func (c *Service) getDeletedAccountsWithCallback(callback func([]string) error) {
 	accountIDs, err := c.getDeletedAccounts()
 	if err != nil && c.logger != nil {
 		c.logger.Error(err.Error())
@@ -71,7 +71,7 @@ func (c *CoreService) getDeletedAccountsWithCallback(callback func([]string) err
 	}
 }
 
-func (c *CoreService) getDeletedAccounts() ([]string, error) {
+func (c *Service) getDeletedAccounts() ([]string, error) {
 	accountIDs := make([]string, 0)
 
 	req, err := c.buildDeletedAccountsRequest()
@@ -103,7 +103,7 @@ func (c *CoreService) getDeletedAccounts() ([]string, error) {
 	return accountIDs, nil
 }
 
-func (c *CoreService) buildDeletedAccountsRequest() (*http.Request, error) {
+func (c *Service) buildDeletedAccountsRequest() (*http.Request, error) {
 	req, err := http.NewRequest("GET", c.serviceAccountManager.AuthService.AuthBaseURL+c.deletedAccountsConfig.path, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error formatting request to get deleted accounts: %v", err)
@@ -112,8 +112,8 @@ func (c *CoreService) buildDeletedAccountsRequest() (*http.Request, error) {
 	return req, nil
 }
 
-// NewCoreService creates and configures a new CoreService instance
-func NewCoreService(serviceAccountManager *authservice.ServiceAccountManager, deletedAccountsConfig *DeletedAccountsConfig, logger *logs.Logger) (*CoreService, error) {
+// NewService creates and configures a new Service instance
+func NewService(serviceAccountManager *auth.ServiceAccountManager, deletedAccountsConfig *DeletedAccountsConfig, logger *logs.Logger) (*Service, error) {
 	if serviceAccountManager == nil {
 		return nil, errors.New("service account manager is missing")
 	}
@@ -132,7 +132,7 @@ func NewCoreService(serviceAccountManager *authservice.ServiceAccountManager, de
 		}
 	}
 
-	core := CoreService{serviceAccountManager: serviceAccountManager, deletedAccountsConfig: deletedAccountsConfig, logger: logger}
+	core := Service{serviceAccountManager: serviceAccountManager, deletedAccountsConfig: deletedAccountsConfig, logger: logger}
 
 	return &core, nil
 }

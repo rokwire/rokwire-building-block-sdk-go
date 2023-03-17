@@ -18,13 +18,13 @@ import (
 	"log"
 
 	"github.com/rokwire/rokwire-sdk-go/services/core"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/authservice"
+	"github.com/rokwire/rokwire-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-sdk-go/utils/logging/logs"
 )
 
 func main() {
 	// Instantiate an AuthService to maintain basic auth data
-	authService := authservice.AuthService{
+	authService := auth.Service{
 		ServiceID:   "example",
 		ServiceHost: "http://localhost:5000",
 		FirstParty:  true,
@@ -32,14 +32,14 @@ func main() {
 	}
 
 	// Instantiate a remote ServiceAccountLoader to load auth service account data from auth service
-	staticTokenAuth := authservice.StaticTokenServiceAuth{ServiceToken: "exampleToken"}
-	serviceAccountLoader, err := authservice.NewRemoteServiceAccountLoader(&authService, "exampleAccountID", staticTokenAuth)
+	staticTokenAuth := auth.StaticTokenServiceAuth{ServiceToken: "exampleToken"}
+	serviceAccountLoader, err := auth.NewRemoteServiceAccountLoader(&authService, "exampleAccountID", staticTokenAuth)
 	if err != nil {
 		log.Fatalf("Error initializing remote service account loader: %v", err)
 	}
 
 	// Instantiate a remote ServiceAccountManager to manage service account-related data
-	serviceAccountManager, err := authservice.NewServiceAccountManager(&authService, serviceAccountLoader)
+	serviceAccountManager, err := auth.NewServiceAccountManager(&authService, serviceAccountLoader)
 	if err != nil {
 		log.Fatalf("Error initializing service account manager: %v", err)
 	}
@@ -49,7 +49,7 @@ func main() {
 		Callback: printDeletedAccountIDs,
 	}
 	logger := logs.NewLogger(authService.ServiceID, nil)
-	coreService, err := core.NewCoreService(serviceAccountManager, &deletedAccountsConfig, logger)
+	coreService, err := core.NewService(serviceAccountManager, &deletedAccountsConfig, logger)
 	if err != nil {
 		log.Printf("Error initializing core service: %v", err)
 	}

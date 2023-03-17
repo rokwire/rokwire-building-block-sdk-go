@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package authservice
+package auth
 
 import (
 	"bytes"
@@ -32,17 +32,17 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
-// -------------------- AuthService --------------------
+// -------------------- Service --------------------
 
-// AuthService contains the configurations needed to interface with the auth service
-type AuthService struct {
+// Service contains the configurations needed to interface with the auth service
+type Service struct {
 	ServiceID   string // ID of implementing service
 	ServiceHost string // Host of the implementing service
 	FirstParty  bool   // Whether the implementing service is a first party member of the ROKWIRE platform
 	AuthBaseURL string // Base URL where auth service resources are located
 }
 
-func checkAuthService(as *AuthService, requireBaseURL bool) error {
+func checkAuthService(as *Service, requireBaseURL bool) error {
 	if as == nil {
 		return errors.New("auth service is missing")
 	}
@@ -65,7 +65,7 @@ func checkAuthService(as *AuthService, requireBaseURL bool) error {
 
 // ServiceRegManager declares a type used to manage service registrations
 type ServiceRegManager struct {
-	AuthService *AuthService
+	AuthService *Service
 
 	services        *syncmap.Map
 	servicesUpdated *time.Time // Most recent time the services cache was updated
@@ -268,7 +268,7 @@ func (s *ServiceRegManager) setServices(services []ServiceReg) {
 }
 
 // NewServiceRegManager creates and configures a new ServiceRegManager instance
-func NewServiceRegManager(authService *AuthService, serviceRegLoader ServiceRegLoader, validate bool) (*ServiceRegManager, error) {
+func NewServiceRegManager(authService *Service, serviceRegLoader ServiceRegLoader, validate bool) (*ServiceRegManager, error) {
 	err := checkAuthService(authService, false)
 	if err != nil {
 		return nil, fmt.Errorf("error checking auth service: %v", err)
@@ -303,7 +303,7 @@ func NewServiceRegManager(authService *AuthService, serviceRegLoader ServiceRegL
 }
 
 // NewTestServiceRegManager creates and configures a test ServiceRegManager instance
-func NewTestServiceRegManager(authService *AuthService, serviceRegLoader ServiceRegLoader, allowImmediateRefresh bool) (*ServiceRegManager, error) {
+func NewTestServiceRegManager(authService *Service, serviceRegLoader ServiceRegLoader, allowImmediateRefresh bool) (*ServiceRegManager, error) {
 	manager, err := NewServiceRegManager(authService, serviceRegLoader, false)
 	if err != nil {
 		return nil, err
@@ -337,7 +337,7 @@ type ServiceRegLoader interface {
 
 // RemoteServiceRegLoaderImpl provides a ServiceRegLoader implementation for a remote auth service
 type RemoteServiceRegLoaderImpl struct {
-	authService *AuthService
+	authService *Service
 	client      *http.Client
 
 	path string // Path to service registrations resource on the auth service
@@ -397,7 +397,7 @@ func (r *RemoteServiceRegLoaderImpl) LoadServices() ([]ServiceReg, error) {
 }
 
 // NewRemoteServiceRegLoader creates and configures a new RemoteServiceRegLoaderImpl instance
-func NewRemoteServiceRegLoader(authService *AuthService, subscribedServices []string) (*RemoteServiceRegLoaderImpl, error) {
+func NewRemoteServiceRegLoader(authService *Service, subscribedServices []string) (*RemoteServiceRegLoaderImpl, error) {
 	err := checkAuthService(authService, true)
 	if err != nil {
 		return nil, fmt.Errorf("error checking auth service: %v", err)
@@ -470,7 +470,7 @@ func NewServiceRegSubscriptions(subscribedServices []string) *ServiceRegSubscrip
 
 // ServiceAccountManager declares a type used to manage service account data
 type ServiceAccountManager struct {
-	AuthService *AuthService
+	AuthService *Service
 
 	accessTokens *syncmap.Map
 	appOrgPairs  []AppOrgPair
@@ -818,7 +818,7 @@ func GetAccessPairs(appID string, orgID string) []AppOrgPair {
 }
 
 // NewServiceAccountManager creates and configures a new ServiceAccountManager instance
-func NewServiceAccountManager(authService *AuthService, serviceAccountLoader ServiceAccountLoader) (*ServiceAccountManager, error) {
+func NewServiceAccountManager(authService *Service, serviceAccountLoader ServiceAccountLoader) (*ServiceAccountManager, error) {
 	err := checkAuthService(authService, false)
 	if err != nil {
 		return nil, fmt.Errorf("error checking auth service: %v", err)
@@ -846,7 +846,7 @@ func NewServiceAccountManager(authService *AuthService, serviceAccountLoader Ser
 }
 
 // NewTestServiceAccountManager creates and configures a test ServiceAccountManager instance
-func NewTestServiceAccountManager(authService *AuthService, serviceAccountLoader ServiceAccountLoader, loadTokens bool) (*ServiceAccountManager, error) {
+func NewTestServiceAccountManager(authService *Service, serviceAccountLoader ServiceAccountLoader, loadTokens bool) (*ServiceAccountManager, error) {
 	err := checkAuthService(authService, false)
 	if err != nil {
 		return nil, fmt.Errorf("error checking auth service: %v", err)
@@ -887,7 +887,7 @@ type ServiceAccountLoader interface {
 
 // RemoteServiceAccountLoaderImpl provides a ServiceAccountLoader implementation for a remote auth service
 type RemoteServiceAccountLoaderImpl struct {
-	authService *AuthService
+	authService *Service
 	client      *http.Client
 
 	accountID string // Service account ID on the auth service
@@ -1007,7 +1007,7 @@ func (r *RemoteServiceAccountLoaderImpl) buildAccessTokensRequest() (*http.Reque
 }
 
 // NewRemoteServiceAccountLoader creates and configures a new RemoteServiceAccountLoaderImpl instance
-func NewRemoteServiceAccountLoader(authService *AuthService, accountID string, serviceAuthType ServiceAuthType) (*RemoteServiceAccountLoaderImpl, error) {
+func NewRemoteServiceAccountLoader(authService *Service, accountID string, serviceAuthType ServiceAuthType) (*RemoteServiceAccountLoaderImpl, error) {
 	err := checkAuthService(authService, true)
 	if err != nil {
 		return nil, fmt.Errorf("error checking auth service: %v", err)

@@ -26,13 +26,13 @@ import (
 	"testing"
 
 	"github.com/rokwire/rokwire-sdk-go/internal/testutils"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/authservice"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/authservice/mocks"
+	"github.com/rokwire/rokwire-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-sdk-go/services/core/auth/keys"
+	"github.com/rokwire/rokwire-sdk-go/services/core/auth/mocks"
 	"github.com/rokwire/rokwire-sdk-go/services/core/auth/sigauth"
 )
 
-func setupTestSignatureAuth(authService *authservice.AuthService, mockLoader *mocks.ServiceRegLoader) (*sigauth.SignatureAuth, error) {
+func setupTestSignatureAuth(authService *auth.Service, mockLoader *mocks.ServiceRegLoader) (*sigauth.SignatureAuth, error) {
 	privKey, err := testutils.GetSamplePrivKey(keys.RS256)
 	if err != nil {
 		return nil, fmt.Errorf("error getting sample privkey: %v", err)
@@ -44,7 +44,7 @@ func setupTestSignatureAuth(authService *authservice.AuthService, mockLoader *mo
 	return sigauth.NewSignatureAuth(privKey, manager, true, true)
 }
 
-func setupTestSignatureAuthWithPrivKey(authService *authservice.AuthService, mockLoader *mocks.ServiceRegLoader, key *keys.PrivKey) (*sigauth.SignatureAuth, error) {
+func setupTestSignatureAuthWithPrivKey(authService *auth.Service, mockLoader *mocks.ServiceRegLoader, key *keys.PrivKey) (*sigauth.SignatureAuth, error) {
 	if key == nil {
 		return nil, errors.New("privkey is nil")
 	}
@@ -64,8 +64,8 @@ func TestSignatureAuth_CheckServiceSignature(t *testing.T) {
 	}
 
 	authService := testutils.SetupTestAuthService("test", "https://test.rokwire.com")
-	testServiceReg := authservice.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: pubKey}
-	serviceRegsValid := []authservice.ServiceReg{testServiceReg}
+	testServiceReg := auth.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: pubKey}
+	serviceRegsValid := []auth.ServiceReg{testServiceReg}
 
 	mockLoader := testutils.SetupMockServiceRegLoader(authService, nil, serviceRegsValid, nil, false)
 	s, err := setupTestSignatureAuth(authService, mockLoader)
@@ -109,8 +109,8 @@ func TestSignatureAuth_CheckSignature(t *testing.T) {
 	}
 
 	authService := testutils.SetupTestAuthService("test", "https://test.rokwire.com")
-	testServiceReg := authservice.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: pubKey}
-	serviceRegsValid := []authservice.ServiceReg{testServiceReg}
+	testServiceReg := auth.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: pubKey}
+	serviceRegsValid := []auth.ServiceReg{testServiceReg}
 
 	mockLoader := testutils.SetupMockServiceRegLoader(authService, nil, serviceRegsValid, nil, false)
 
@@ -161,8 +161,8 @@ func TestSignatureAuth_CheckRequestServiceSignature(t *testing.T) {
 	}
 
 	authService := testutils.SetupTestAuthService("test", "https://test.rokwire.com")
-	testServiceReg := authservice.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: pubKey}
-	serviceRegsValid := []authservice.ServiceReg{testServiceReg}
+	testServiceReg := auth.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: pubKey}
+	serviceRegsValid := []auth.ServiceReg{testServiceReg}
 
 	mockLoader := testutils.SetupMockServiceRegLoader(authService, nil, serviceRegsValid, nil, false)
 	s, err := setupTestSignatureAuth(authService, mockLoader)
@@ -234,8 +234,8 @@ func TestSignatureAuth_CheckRequestSignature(t *testing.T) {
 	}
 
 	authService := testutils.SetupTestAuthService("test", "https://test.rokwire.com")
-	testServiceReg := authservice.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: pubKey}
-	serviceRegsValid := []authservice.ServiceReg{testServiceReg}
+	testServiceReg := auth.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: pubKey}
+	serviceRegsValid := []auth.ServiceReg{testServiceReg}
 
 	mockLoader := testutils.SetupMockServiceRegLoader(authService, nil, serviceRegsValid, nil, false)
 
@@ -308,8 +308,8 @@ func TestSignatureAuth_CheckParsedRequestSignature(t *testing.T) {
 	}
 
 	authService := testutils.SetupTestAuthService("test", "https://test.rokwire.com")
-	testServiceReg := authservice.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: pubKey}
-	serviceRegsValid := []authservice.ServiceReg{testServiceReg}
+	testServiceReg := auth.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: pubKey}
+	serviceRegsValid := []auth.ServiceReg{testServiceReg}
 
 	mockLoader := testutils.SetupMockServiceRegLoader(authService, nil, serviceRegsValid, nil, false)
 	s, err := setupTestSignatureAuth(authService, mockLoader)

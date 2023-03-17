@@ -23,8 +23,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/rokwire/rokwire-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-sdk-go/services/core/auth/authorization"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/authservice"
 	"github.com/rokwire/rokwire-sdk-go/services/core/auth/keys"
 	"github.com/rokwire/rokwire-sdk-go/utils/rokwireutils"
 )
@@ -63,8 +63,8 @@ type Claims struct {
 }
 
 // AppOrg returns the AppOrgPair for the claims
-func (c Claims) AppOrg() authservice.AppOrgPair {
-	return authservice.AppOrgPair{AppID: c.AppID, OrgID: c.OrgID}
+func (c Claims) AppOrg() auth.AppOrgPair {
+	return auth.AppOrgPair{AppID: c.AppID, OrgID: c.OrgID}
 }
 
 // Scopes returns the scopes from the claims as a slice
@@ -82,7 +82,7 @@ func (c Claims) CanAccess(appID string, orgID string, system bool) error {
 
 	if c.Service {
 		// if a service, check if claimed appID, orgID match a pair granting access to resource appID, orgID
-		for _, pair := range authservice.GetAccessPairs(appID, orgID) {
+		for _, pair := range auth.GetAccessPairs(appID, orgID) {
 			if pair.AppID == c.AppID && pair.OrgID == c.OrgID {
 				return nil
 			}
@@ -104,7 +104,7 @@ func (c Claims) CanAccess(appID string, orgID string, system bool) error {
 
 // TokenAuth contains configurations and helper functions required to validate tokens
 type TokenAuth struct {
-	serviceRegManager   *authservice.ServiceRegManager
+	serviceRegManager   *auth.ServiceRegManager
 	acceptRokwireTokens bool
 
 	permissionAuth authorization.Authorization
@@ -365,7 +365,7 @@ func (t *TokenAuth) SetBlacklistSize(size int) {
 
 // NewTokenAuth creates and configures a new TokenAuth instance
 // authorization maybe nil if performing manual authorization
-func NewTokenAuth(acceptRokwireTokens bool, serviceRegManager *authservice.ServiceRegManager, permissionAuth authorization.Authorization, scopeAuth authorization.Authorization) (*TokenAuth, error) {
+func NewTokenAuth(acceptRokwireTokens bool, serviceRegManager *auth.ServiceRegManager, permissionAuth authorization.Authorization, scopeAuth authorization.Authorization) (*TokenAuth, error) {
 	if serviceRegManager == nil {
 		return nil, errors.New("service registration manager is missing")
 	}

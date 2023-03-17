@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/authservice"
+	"github.com/rokwire/rokwire-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-sdk-go/services/core/auth/keys"
 	"github.com/rokwire/rokwire-sdk-go/utils/rokwireutils"
 	"gopkg.in/go-playground/validator.v9"
@@ -43,7 +43,7 @@ const (
 
 // SignatureAuth contains configurations and helper functions required to validate signatures
 type SignatureAuth struct {
-	serviceRegManager *authservice.ServiceRegManager
+	serviceRegManager *auth.ServiceRegManager
 
 	serviceKey    *keys.PrivKey
 	servicePubKey *keys.PubKey
@@ -177,7 +177,7 @@ func (s *SignatureAuth) CheckRequestServiceSignature(r *Request, requiredService
 		requiredServiceIDs = s.serviceRegManager.SubscribedServices()
 	}
 
-	var serviceReg *authservice.ServiceReg
+	var serviceReg *auth.ServiceReg
 	found := false
 	for _, serviceID := range requiredServiceIDs {
 		serviceReg, err = s.serviceRegManager.GetServiceRegWithPubKey(serviceID)
@@ -307,7 +307,7 @@ func (s *SignatureAuth) ModifyRequest(req *http.Request) error {
 }
 
 // NewSignatureAuth creates and configures a new SignatureAuth instance
-func NewSignatureAuth(serviceKey *keys.PrivKey, serviceRegManager *authservice.ServiceRegManager, serviceRegKey bool, supportLegacy bool) (*SignatureAuth, error) {
+func NewSignatureAuth(serviceKey *keys.PrivKey, serviceRegManager *auth.ServiceRegManager, serviceRegKey bool, supportLegacy bool) (*SignatureAuth, error) {
 	if serviceKey == nil {
 		return nil, errors.New("service key is missing")
 	}

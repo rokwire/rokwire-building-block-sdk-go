@@ -25,15 +25,15 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/rokwire/rokwire-sdk-go/internal/testutils"
+	"github.com/rokwire/rokwire-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-sdk-go/services/core/auth/authorization"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/authservice"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/authservice/mocks"
 	"github.com/rokwire/rokwire-sdk-go/services/core/auth/keys"
+	"github.com/rokwire/rokwire-sdk-go/services/core/auth/mocks"
 	"github.com/rokwire/rokwire-sdk-go/services/core/auth/tokenauth"
 	"github.com/rokwire/rokwire-sdk-go/utils/rokwireutils"
 )
 
-func setupTestTokenAuth(authService *authservice.AuthService, acceptRokwire bool, mockLoader *mocks.ServiceRegLoader) (*tokenauth.TokenAuth, error) {
+func setupTestTokenAuth(authService *auth.Service, acceptRokwire bool, mockLoader *mocks.ServiceRegLoader) (*tokenauth.TokenAuth, error) {
 	manager, err := testutils.SetupTestServiceRegManager(authService, mockLoader)
 	if err != nil {
 		return nil, fmt.Errorf("error setting up test auth service: %v", err)
@@ -126,9 +126,9 @@ func TestTokenAuth_CheckToken(t *testing.T) {
 	}
 
 	authService := testutils.SetupTestAuthService("test", "https://test.rokwire.com")
-	testServiceReg := authservice.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: nil}
-	authServiceReg := authservice.ServiceReg{ServiceID: "auth", Host: "https://auth.rokwire.com", PubKey: pubKey}
-	serviceRegsValid := []authservice.ServiceReg{authServiceReg, testServiceReg}
+	testServiceReg := auth.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: nil}
+	authServiceReg := auth.ServiceReg{ServiceID: "auth", Host: "https://auth.rokwire.com", PubKey: pubKey}
+	serviceRegsValid := []auth.ServiceReg{authServiceReg, testServiceReg}
 	subscribed := []string{"auth"}
 
 	samplePrivKey, err := testutils.GetSamplePrivKey(keys.PS256)
@@ -187,7 +187,7 @@ func TestTokenAuth_CheckToken(t *testing.T) {
 		t.Errorf("Error getting sample pubkey: %v", err)
 		return
 	}
-	wrongAlgServiceRegsValid := []authservice.ServiceReg{{ServiceID: "auth", Host: "https://auth.rokwire.com", PubKey: wrongAlgPubKey}, testServiceReg}
+	wrongAlgServiceRegsValid := []auth.ServiceReg{{ServiceID: "auth", Host: "https://auth.rokwire.com", PubKey: wrongAlgPubKey}, testServiceReg}
 
 	// Invalid key ID
 	wrongKeyIDPrivKey := *samplePrivKey
@@ -206,7 +206,7 @@ func TestTokenAuth_CheckToken(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error initializing wrong key token: %v", err)
 	}
-	wrongKeyServiceRegsValid := []authservice.ServiceReg{{ServiceID: "auth", Host: "https://auth.rokwire.com", PubKey: wrongPubKey}, testServiceReg}
+	wrongKeyServiceRegsValid := []auth.ServiceReg{{ServiceID: "auth", Host: "https://auth.rokwire.com", PubKey: wrongPubKey}, testServiceReg}
 
 	type args struct {
 		token   string
@@ -216,7 +216,7 @@ func TestTokenAuth_CheckToken(t *testing.T) {
 		name               string
 		args               args
 		acceptRokwire      bool
-		updatedServiceRegs []authservice.ServiceReg
+		updatedServiceRegs []auth.ServiceReg
 		want               *tokenauth.Claims
 		wantErr            bool
 		errSubstring       string
@@ -268,9 +268,9 @@ func TestTokenAuth_CheckToken(t *testing.T) {
 
 func TestTokenAuth_CheckRequestToken(t *testing.T) {
 	authService := testutils.SetupTestAuthService("test", "https://test.rokwire.com")
-	testServiceReg := authservice.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: nil}
-	authServiceReg := authservice.ServiceReg{ServiceID: "auth", Host: "https://auth.rokwire.com", PubKey: nil}
-	serviceRegsValid := []authservice.ServiceReg{authServiceReg, testServiceReg}
+	testServiceReg := auth.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: nil}
+	authServiceReg := auth.ServiceReg{ServiceID: "auth", Host: "https://auth.rokwire.com", PubKey: nil}
+	serviceRegsValid := []auth.ServiceReg{authServiceReg, testServiceReg}
 	subscribed := []string{"auth"}
 
 	type args struct {
@@ -434,9 +434,9 @@ func TestTokenAuth_AuthorizeRequestPermissions(t *testing.T) {
 	}
 
 	authService := testutils.SetupTestAuthService("test", "https://test.rokwire.com")
-	testServiceReg := authservice.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: nil}
-	authServiceReg := authservice.ServiceReg{ServiceID: "auth", Host: "https://auth.rokwire.com", PubKey: pubKey}
-	serviceRegsValid := []authservice.ServiceReg{authServiceReg, testServiceReg}
+	testServiceReg := auth.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: nil}
+	authServiceReg := auth.ServiceReg{ServiceID: "auth", Host: "https://auth.rokwire.com", PubKey: pubKey}
+	serviceRegsValid := []auth.ServiceReg{authServiceReg, testServiceReg}
 	subscribed := []string{"auth"}
 
 	// Valid rokwire
@@ -480,9 +480,9 @@ func TestTokenAuth_AuthorizeRequestScope(t *testing.T) {
 	}
 
 	authService := testutils.SetupTestAuthService("test", "https://test.rokwire.com")
-	testServiceReg := authservice.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: nil}
-	authServiceReg := authservice.ServiceReg{ServiceID: "auth", Host: "https://auth.rokwire.com", PubKey: pubKey}
-	serviceRegsValid := []authservice.ServiceReg{authServiceReg, testServiceReg}
+	testServiceReg := auth.ServiceReg{ServiceID: authService.ServiceID, Host: authService.ServiceHost, PubKey: nil}
+	authServiceReg := auth.ServiceReg{ServiceID: "auth", Host: "https://auth.rokwire.com", PubKey: pubKey}
+	serviceRegsValid := []auth.ServiceReg{authServiceReg, testServiceReg}
 	subscribed := []string{"auth"}
 
 	// Valid rokwire
