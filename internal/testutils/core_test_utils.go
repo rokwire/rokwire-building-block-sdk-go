@@ -17,9 +17,9 @@ package testutils
 import (
 	"fmt"
 
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/keys"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/mocks"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/keys"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/mocks"
 )
 
 // GetSampleRSAPubKeyPem returns a sample RSA public key PEM

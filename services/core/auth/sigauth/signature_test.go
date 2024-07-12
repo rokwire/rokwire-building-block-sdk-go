@@ -25,11 +25,11 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/rokwire/rokwire-sdk-go/internal/testutils"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/keys"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/mocks"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/sigauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/internal/testutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/keys"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/mocks"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/sigauth"
 )
 
 func setupTestSignatureAuth(authService *auth.Service, mockLoader *mocks.ServiceRegLoader) (*sigauth.SignatureAuth, error) {

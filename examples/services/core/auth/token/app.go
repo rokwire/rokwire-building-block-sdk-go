@@ -20,9 +20,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/authorization"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/tokenauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/tokenauth"
 )
 
 // WebAdapter is the web adapter for token auth
@@ -75,7 +75,7 @@ func NewWebAdapter(handlers tokenauth.Handlers) WebAdapter {
 }
 
 func main() {
-	// Instantiate an AuthService to maintain basic auth data
+	// Instantiate an auth.Service to maintain basic auth data
 	authService := auth.Service{
 		ServiceID:   "example",
 		ServiceHost: "http://localhost:5000",

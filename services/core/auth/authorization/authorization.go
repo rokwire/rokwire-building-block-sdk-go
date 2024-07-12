@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"github.com/casbin/casbin/v2"
-	"github.com/rokwire/rokwire-sdk-go/utils/rokwireutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 )
 
 const (

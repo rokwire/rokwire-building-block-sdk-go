@@ -20,9 +20,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rokwire/rokwire-sdk-go/utils/errors"
-	"github.com/rokwire/rokwire-sdk-go/utils/logging/logs"
-	"github.com/rokwire/rokwire-sdk-go/utils/logging/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 )
 
 type handlerFunc = func(*logs.Log, *http.Request) logs.HTTPResponse
