@@ -12,11 +12,11 @@ There are different ways you can contribute to the Rokwire Platform. You can sta
 
 ## Reporting Bugs/Accessibility/Usability Issues
 
-If you find any bugs, accessibility or usability issues please report them using the appropriate [issue templates](https://github.com/rokwire/rokwire-sdk-go/issues/new/choose). Please make sure that it’s not a duplicate of an existing issue by searching the [issues list](https://github.com/rokwire/rokwire-sdk-go/issues). Please provide as many details as possible to help the contributors who, like you, will be working on it in the future.
+If you find any bugs, accessibility or usability issues please report them using the appropriate [issue templates](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/new/choose). Please make sure that it’s not a duplicate of an existing issue by searching the [issues list](https://github.com/rokwire/rokwire-building-block-sdk-go/issues). Please provide as many details as possible to help the contributors who, like you, will be working on it in the future.
 
 ## Requesting Features/Enhancements
 
-We are always on the lookout for new ideas and feature requests. Please share your thoughts about a new feature or enhancement by submitting a [Feature Request](https://github.com/rokwire/rokwire-sdk-go/issues/new?assignees=&labels=enhancement&template=feature_request.md&title=%5BFEATURE%5D). Please make sure that this is not a duplicate of an existing feature request by searching the [issues list](https://github.com/rokwire/rokwire-sdk-go/issues). Here also, please share as many details as possible for future discussion.
+We are always on the lookout for new ideas and feature requests. Please share your thoughts about a new feature or enhancement by submitting a [Feature Request](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/new?assignees=&labels=enhancement&template=feature_request.md&title=%5BFEATURE%5D). Please make sure that this is not a duplicate of an existing feature request by searching the [issues list](https://github.com/rokwire/rokwire-building-block-sdk-go/issues). Here also, please share as many details as possible for future discussion.
 
 ## Contributing Code
 
@@ -42,4 +42,4 @@ Each repository will have at least one maintainer who will be responsible for re
 
 ### Documentation
 
-Developer documentation is available in the [README](README.md) and the [Wiki](https://github.com/rokwire/rokwire-sdk-go/wiki).
+Developer documentation is available in the [README](README.md) and the [Wiki](https://github.com/rokwire/rokwire-building-block-sdk-go/wiki).
