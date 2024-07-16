@@ -72,14 +72,19 @@ func (a *Adapter) StartSession(opts ...*options.SessionOptions) (mongo.Session, 
 	return a.db.dbClient.StartSession(opts...)
 }
 
-// transactionHandler represents an entity that is able to handle a transaction on a MongoDB database
-type transactionHandler[T common.Storage] interface {
+// NewStorageListener creates a new StorageListener
+func (a *Adapter) NewStorageListener() StorageListener {
+	return StorageListener{adapter: a}
+}
+
+// TransactionHandler represents an entity that is able to handle a transaction on a MongoDB database
+type TransactionHandler[T common.Storage] interface {
 	WithContext(context mongo.SessionContext) T
-	StartSession() (mongo.Session, error)
+	StartSession(opts ...*options.SessionOptions) (mongo.Session, error)
 }
 
 // PerformTransaction performs a transaction
-func PerformTransaction[T common.Storage](th transactionHandler[T], transaction func(storage T) error) error {
+func PerformTransaction[T common.Storage](th TransactionHandler[T], transaction func(storage T) error) error {
 	// transaction
 	callback := func(sessionContext mongo.SessionContext) (interface{}, error) {
 		adapter := th.WithContext(sessionContext)

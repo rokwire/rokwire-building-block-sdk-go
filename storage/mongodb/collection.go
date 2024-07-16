@@ -275,14 +275,14 @@ func (collWrapper *CollectionWrapper) ListIndexes(ctx context.Context, l *logs.L
 
 	indexes, err := collWrapper.Coll.Indexes().List(ctx, nil)
 	if err != nil {
-		l.Errorf("error getting indexes list: %s\n", err)
+		l.Errorf("error getting indexes list: %s", err)
 		return nil, err
 	}
 
 	var list []bson.M
 	err = indexes.All(ctx, &list)
 	if err != nil {
-		l.Errorf("error iterating indexes list: %s\n", err)
+		l.Errorf("error iterating indexes list: %s", err)
 		return nil, err
 	}
 	return list, nil
@@ -359,7 +359,7 @@ func (collWrapper *CollectionWrapper) Watch(pipeline interface{}, l *logs.Logger
 	for {
 		rt, err = collWrapper.watch(pipeline, rt, l)
 		if err != nil {
-			l.Errorf("mongo watch error: %s\n", err.Error())
+			l.Errorf("mongo watch error: %s", err.Error())
 		}
 	}
 }
@@ -385,10 +385,10 @@ func (collWrapper *CollectionWrapper) watch(pipeline interface{}, resumeToken bs
 	defer cur.Close(ctx)
 
 	var changeDoc map[string]interface{}
-	l.Infof("%s: waiting for changes\n", collWrapper.Coll.Name())
+	l.Infof("%s: waiting for changes", collWrapper.Coll.Name())
 	for cur.Next(ctx) {
 		if e := cur.Decode(&changeDoc); e != nil {
-			l.Errorf("error decoding: %s\n", e)
+			l.Errorf("error decoding: %s", e)
 		}
 		collWrapper.Database.onDataChanged(changeDoc)
 	}
