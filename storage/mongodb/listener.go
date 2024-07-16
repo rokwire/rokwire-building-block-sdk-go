@@ -18,11 +18,13 @@ import (
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/common"
 )
 
+// StorageListener handles responding to database changes
 type StorageListener struct {
 	adapter *Adapter
 	common.DefaultStorageListener
 }
 
+// OnConfigsUpdated handles database updates to configs
 func (s *StorageListener) OnConfigsUpdated() {
 	s.adapter.cacheConfigs()
 }

@@ -43,6 +43,7 @@ type Config struct {
 	DateUpdated *time.Time  `json:"date_updated" bson:"date_updated"`
 }
 
+// GetConfig retrieves a single configs by its ID and determines if the user may access it
 func GetConfig(storage Storage, claims *tokenauth.Claims, id string) (*Config, error) {
 	config, err := storage.FindConfigByID(id)
 	if err != nil {
@@ -60,6 +61,7 @@ func GetConfig(storage Storage, claims *tokenauth.Claims, id string) (*Config, e
 	return config, nil
 }
 
+// GetConfigs retrieves a list of configs and returns a list of those the user may access
 func GetConfigs(storage Storage, claims *tokenauth.Claims, configType *string) ([]Config, error) {
 	configs, err := storage.FindConfigs(configType)
 	if err != nil {
@@ -75,6 +77,7 @@ func GetConfigs(storage Storage, claims *tokenauth.Claims, configType *string) (
 	return allowedConfigs, nil
 }
 
+// CreateConfig creates a new config if the user has appropriate access
 func CreateConfig(storage Storage, claims *tokenauth.Claims, item Config) (*Config, error) {
 	// must be a system config if applying to all orgs
 	if item.OrgID == rokwireutils.AllOrgs && !item.System {
@@ -97,6 +100,7 @@ func CreateConfig(storage Storage, claims *tokenauth.Claims, item Config) (*Conf
 	return &config, nil
 }
 
+// UpdateConfig updates an exisitng config if the user has appropriate access
 func UpdateConfig(storage Storage, claims *tokenauth.Claims, id string, item Config) (*Config, error) {
 	// must be a system config if applying to all orgs
 	if item.OrgID == rokwireutils.AllOrgs && !item.System {
@@ -132,6 +136,7 @@ func UpdateConfig(storage Storage, claims *tokenauth.Claims, id string, item Con
 	return nil, nil
 }
 
+// DeleteConfig removes an existing config if the user has appropriate access
 func DeleteConfig(storage Storage, claims *tokenauth.Claims, id string) error {
 	config, err := storage.FindConfigByID(id)
 	if err != nil {

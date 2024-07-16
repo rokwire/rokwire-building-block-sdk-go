@@ -99,3 +99,30 @@ func (d *Database) setupConfigsCollection() error {
 	d.Logger.Info("configs setup passed")
 	return nil
 }
+
+func (d *Database) onDataChanged(changeDoc map[string]interface{}) {
+	if changeDoc == nil {
+		return
+	}
+	d.Logger.Infof("onDataChanged: %+v\n", changeDoc)
+	ns := changeDoc["ns"]
+	if ns == nil {
+		return
+	}
+	nsMap := ns.(map[string]interface{})
+	coll, ok := nsMap["coll"].(string)
+	if !ok {
+		return
+	}
+
+	switch coll {
+	case "configs":
+		d.Logger.Info("configs collection changed")
+
+		for _, listener := range d.Listeners {
+			go listener.OnConfigsUpdated()
+		}
+	default:
+		d.OnDataChanged(coll)
+	}
+}

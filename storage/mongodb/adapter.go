@@ -23,6 +23,7 @@ import (
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/sync/syncmap"
 )
 
@@ -61,25 +62,27 @@ func (a *Adapter) RegisterStorageListener(listener common.StorageListener) {
 	a.db.Listeners = append(a.db.Listeners, listener)
 }
 
-// Creates a new Adapter with provided context
+// WithContext creates a new Adapter with provided context
 func (a *Adapter) WithContext(context mongo.SessionContext) common.Storage {
 	return &Adapter{db: a.db, Context: context, cachedConfigs: a.cachedConfigs, configsLock: a.configsLock}
 }
 
-func (a *Adapter) StartSession() (mongo.Session, error) {
-	return a.db.dbClient.StartSession()
+// StartSession starts a new session on the underlying MongoDB database
+func (a *Adapter) StartSession(opts ...*options.SessionOptions) (mongo.Session, error) {
+	return a.db.dbClient.StartSession(opts...)
 }
 
-type StorageContext[T common.Storage] interface {
+// transactionHandler represents an entity that is able to handle a transaction on a MongoDB database
+type transactionHandler[T common.Storage] interface {
 	WithContext(context mongo.SessionContext) T
 	StartSession() (mongo.Session, error)
 }
 
 // PerformTransaction performs a transaction
-func PerformTransaction[T common.Storage](sc StorageContext[T], transaction func(storage T) error) error {
+func PerformTransaction[T common.Storage](th transactionHandler[T], transaction func(storage T) error) error {
 	// transaction
 	callback := func(sessionContext mongo.SessionContext) (interface{}, error) {
-		adapter := sc.WithContext(sessionContext)
+		adapter := th.WithContext(sessionContext)
 
 		err := transaction(adapter)
 		if err != nil {
@@ -92,7 +95,7 @@ func PerformTransaction[T common.Storage](sc StorageContext[T], transaction func
 		return nil, nil
 	}
 
-	session, err := sc.StartSession()
+	session, err := th.StartSession()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionStart, "mongo session", nil, err)
 	}
@@ -106,6 +109,7 @@ func PerformTransaction[T common.Storage](sc StorageContext[T], transaction func
 	return nil
 }
 
+// FilterArgs creates a log object from an unordered MongoDB filter document
 func FilterArgs(filter bson.M) *logutils.FieldArgs {
 	args := logutils.FieldArgs{}
 	for k, v := range filter {
