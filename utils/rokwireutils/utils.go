@@ -18,10 +18,12 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 )
 
 const (
@@ -106,4 +108,19 @@ func GenerateRandomBytes(n int) ([]byte, error) {
 func GenerateRandomString(s int) (string, error) {
 	b, err := GenerateRandomBytes(s)
 	return base64.RawURLEncoding.EncodeToString(b), err
+}
+
+// GetValue returns the value corresponding to key in items; returns an error if missing and required or not the expected type
+func GetValue[T any](items map[string]interface{}, key string, required bool) (T, error) {
+	mapValue, ok := items[key]
+	if required && !ok {
+		return *new(T), errors.ErrorData(logutils.StatusMissing, "map value", &logutils.FieldArgs{"key": key, "required": required})
+	}
+
+	value, ok := mapValue.(T)
+	if !ok {
+		return *new(T), errors.ErrorData(logutils.StatusInvalid, "map value", &logutils.FieldArgs{"key": key, "required": required})
+	}
+
+	return value, nil
 }

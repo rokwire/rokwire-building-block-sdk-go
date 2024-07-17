@@ -102,11 +102,11 @@ vendor:
 
 .PHONY: oapi-gen-types
 oapi-gen-types: ;
-	oapi-codegen --config oapi-codegen-config.yaml driver/web/docs/gen/def.yaml
+	oapi-codegen --config oapi-codegen-config.yaml web/docs/gen/def.yaml
 
 .PHONY: oapi-gen-docs
 oapi-gen-docs: ;
-	swagger-cli bundle driver/web/docs/index.yaml --outfile driver/web/docs/gen/def.yaml --type yaml
+	swagger-cli bundle web/docs/index.yaml --outfile web/docs/gen/def.yaml --type yaml
 
 .PHONY: log-variables
 log-variables: ; $(info $(M) logging variables...) @ ## Log the variables values

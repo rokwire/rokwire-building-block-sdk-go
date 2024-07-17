@@ -44,8 +44,8 @@ type Config struct {
 }
 
 // GetConfig retrieves a single configs by its ID and determines if the user may access it
-func GetConfig(storage Storage, claims *tokenauth.Claims, id string) (*Config, error) {
-	config, err := storage.FindConfigByID(id)
+func (a appAdmin) GetConfig(claims *tokenauth.Claims, id string) (*Config, error) {
+	config, err := a.app.Storage.FindConfigByID(id)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, TypeConfig, nil, err)
 	}
@@ -62,8 +62,8 @@ func GetConfig(storage Storage, claims *tokenauth.Claims, id string) (*Config, e
 }
 
 // GetConfigs retrieves a list of configs and returns a list of those the user may access
-func GetConfigs(storage Storage, claims *tokenauth.Claims, configType *string) ([]Config, error) {
-	configs, err := storage.FindConfigs(configType)
+func (a appAdmin) GetConfigs(claims *tokenauth.Claims, configType *string) ([]Config, error) {
+	configs, err := a.app.Storage.FindConfigs(configType)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, TypeConfig, nil, err)
 	}
@@ -78,7 +78,7 @@ func GetConfigs(storage Storage, claims *tokenauth.Claims, configType *string) (
 }
 
 // CreateConfig creates a new config if the user has appropriate access
-func CreateConfig(storage Storage, claims *tokenauth.Claims, item Config) (*Config, error) {
+func (a appAdmin) CreateConfig(claims *tokenauth.Claims, item Config) (*Config, error) {
 	// must be a system config if applying to all orgs
 	if item.OrgID == rokwireutils.AllOrgs && !item.System {
 		return nil, errors.ErrorData(logutils.StatusInvalid, "config system status", &logutils.FieldArgs{"config.org_id": rokwireutils.AllOrgs})
@@ -91,7 +91,7 @@ func CreateConfig(storage Storage, claims *tokenauth.Claims, item Config) (*Conf
 
 	item.ID = uuid.NewString()
 	item.DateCreated = time.Now().UTC()
-	err = storage.InsertConfig(item)
+	err = a.app.Storage.InsertConfig(item)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, TypeConfig, nil, err)
 	}
@@ -101,13 +101,13 @@ func CreateConfig(storage Storage, claims *tokenauth.Claims, item Config) (*Conf
 }
 
 // UpdateConfig updates an exisitng config if the user has appropriate access
-func UpdateConfig(storage Storage, claims *tokenauth.Claims, id string, item Config) (*Config, error) {
+func (a appAdmin) UpdateConfig(claims *tokenauth.Claims, id string, item Config) (*Config, error) {
 	// must be a system config if applying to all orgs
 	if item.OrgID == rokwireutils.AllOrgs && !item.System {
 		return nil, errors.ErrorData(logutils.StatusInvalid, "config system status", &logutils.FieldArgs{"config.org_id": rokwireutils.AllOrgs})
 	}
 
-	oldConfig, err := storage.FindConfig(item.Type, item.AppID, item.OrgID)
+	oldConfig, err := a.app.Storage.FindConfig(item.Type, item.AppID, item.OrgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, TypeConfig, nil, err)
 	}
@@ -128,7 +128,7 @@ func UpdateConfig(storage Storage, claims *tokenauth.Claims, id string, item Con
 	item.ID = oldConfig.ID
 	item.DateUpdated = &now
 
-	err = storage.UpdateConfig(item)
+	err = a.app.Storage.UpdateConfig(item)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, TypeConfig, nil, err)
 	}
@@ -137,8 +137,8 @@ func UpdateConfig(storage Storage, claims *tokenauth.Claims, id string, item Con
 }
 
 // DeleteConfig removes an existing config if the user has appropriate access
-func DeleteConfig(storage Storage, claims *tokenauth.Claims, id string) error {
-	config, err := storage.FindConfigByID(id)
+func (a appAdmin) DeleteConfig(claims *tokenauth.Claims, id string) error {
+	config, err := a.app.Storage.FindConfigByID(id)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, TypeConfig, nil, err)
 	}
@@ -151,7 +151,7 @@ func DeleteConfig(storage Storage, claims *tokenauth.Claims, id string) error {
 		return errors.WrapErrorAction(logutils.ActionValidate, "config access", nil, err)
 	}
 
-	err = storage.DeleteConfig(id)
+	err = a.app.Storage.DeleteConfig(id)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, TypeConfig, nil, err)
 	}

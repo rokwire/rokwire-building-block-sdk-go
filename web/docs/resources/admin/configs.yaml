@@ -1,0 +1,104 @@
+get:
+  tags:
+  - Admin
+  summary: Get configs
+  description: |
+    Get existing configs by search parameters
+
+    **Auth:** Requires valid admin token with one of the following permissions:
+    - `get_configs_<name>`
+    - `update_configs_<name>`
+    - `delete_configs_<name>`
+    - `all_configs_<name>`
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: config_type
+      in: query
+      description: config type
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+  responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../schemas/application/Config.yaml"
+      400:
+        description: Bad request
+      401:
+        description: Unauthorized
+      500:
+        description: Internal error
+  x-core-function: GetConfigs
+  x-data-type: common.Config
+  x-authentication-type: Permissions
+post:
+  tags:
+  - Admin
+  summary: Create config
+  description: |
+    Creates a new config
+
+    **Auth:** Requires valid admin token with one of the following permissions:
+    - `update_configs_<name>`
+    - `all_configs_<name>`
+  security:
+    - bearerAuth: []
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: "../../schemas/apis/admin/update-configs/Request.yaml"
+        examples:
+          system:
+            summary: System-wide config
+            value: 
+              type: "config_type"
+              all_apps: true
+              all_orgs: true
+              system: true
+              data:
+                example_env: "example"
+          org_admin:
+            summary: Organization-wide config
+            value: 
+              type: "config_type"
+              all_apps: true
+              all_orgs: false
+              system: false
+              data:
+                example_env: "example"
+          app_org_specific:
+            summary: Application organization specific config
+            value: 
+              type: "config_type"
+              all_apps: false
+              all_orgs: false
+              system: false
+              data:
+                example_env: "example"
+    required: true
+  responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: "../../schemas/application/Config.yaml"
+      400:
+        description: Bad request
+      401:
+        description: Unauthorized
+      500:
+        description: Internal error
+  x-core-function: CreateConfig
+  x-data-type: common.Config
+  x-authentication-type: Permissions
+  x-conversion-function: configFromRequest
