@@ -19,40 +19,40 @@ import (
 )
 
 // Application represents the core application code based on hexagonal architecture
-type Application struct {
-	version string
-	build   string
+type Application[T Storage] struct {
+	Version string
+	Build   string
 
 	Default Default // expose to the drivers adapters
 	Admin   Admin   // expose to the drivers adapters
 
 	Logger *logs.Logger
 
-	Storage Storage
+	Storage T
 }
 
 // appDefault contains default implementations
-type appDefault struct {
-	app *Application
+type appDefault[T Storage] struct {
+	app *Application[T]
 }
 
 // GetVersion gets the current version of this service
-func (a appDefault) GetVersion() (*string, error) {
-	return &a.app.version, nil
+func (a appDefault[T]) GetVersion() (*string, error) {
+	return &a.app.Version, nil
 }
 
 // appAdmin contains admin implementations
-type appAdmin struct {
-	app *Application
+type appAdmin[T Storage] struct {
+	app *Application[T]
 }
 
 // NewApplication creates new Application
-func NewApplication(version string, build string, storage Storage, logger *logs.Logger) *Application {
-	application := Application{version: version, build: build, Storage: storage, Logger: logger}
+func NewApplication[T Storage](version string, build string, storage T, logger *logs.Logger) *Application[T] {
+	application := Application[T]{Version: version, Build: build, Storage: storage, Logger: logger}
 
 	//add the drivers ports/interfaces
-	application.Default = appDefault{app: &application}
-	application.Admin = appAdmin{app: &application}
+	application.Default = appDefault[T]{app: &application}
+	application.Admin = appAdmin[T]{app: &application}
 
 	return &application
 }

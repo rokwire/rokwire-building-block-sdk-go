@@ -44,7 +44,7 @@ type Config struct {
 }
 
 // GetConfig retrieves a single configs by its ID and determines if the user may access it
-func (a appAdmin) GetConfig(claims *tokenauth.Claims, id string) (*Config, error) {
+func (a appAdmin[T]) GetConfig(claims *tokenauth.Claims, id string) (*Config, error) {
 	config, err := a.app.Storage.FindConfigByID(id)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, TypeConfig, nil, err)
@@ -62,7 +62,7 @@ func (a appAdmin) GetConfig(claims *tokenauth.Claims, id string) (*Config, error
 }
 
 // GetConfigs retrieves a list of configs and returns a list of those the user may access
-func (a appAdmin) GetConfigs(claims *tokenauth.Claims, configType *string) ([]Config, error) {
+func (a appAdmin[T]) GetConfigs(claims *tokenauth.Claims, configType *string) ([]Config, error) {
 	configs, err := a.app.Storage.FindConfigs(configType)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, TypeConfig, nil, err)
@@ -78,7 +78,7 @@ func (a appAdmin) GetConfigs(claims *tokenauth.Claims, configType *string) ([]Co
 }
 
 // CreateConfig creates a new config if the user has appropriate access
-func (a appAdmin) CreateConfig(claims *tokenauth.Claims, item Config) (*Config, error) {
+func (a appAdmin[T]) CreateConfig(claims *tokenauth.Claims, item Config) (*Config, error) {
 	// must be a system config if applying to all orgs
 	if item.OrgID == rokwireutils.AllOrgs && !item.System {
 		return nil, errors.ErrorData(logutils.StatusInvalid, "config system status", &logutils.FieldArgs{"config.org_id": rokwireutils.AllOrgs})
@@ -101,7 +101,7 @@ func (a appAdmin) CreateConfig(claims *tokenauth.Claims, item Config) (*Config, 
 }
 
 // UpdateConfig updates an exisitng config if the user has appropriate access
-func (a appAdmin) UpdateConfig(claims *tokenauth.Claims, id string, item Config) (*Config, error) {
+func (a appAdmin[T]) UpdateConfig(claims *tokenauth.Claims, id string, item Config) (*Config, error) {
 	// must be a system config if applying to all orgs
 	if item.OrgID == rokwireutils.AllOrgs && !item.System {
 		return nil, errors.ErrorData(logutils.StatusInvalid, "config system status", &logutils.FieldArgs{"config.org_id": rokwireutils.AllOrgs})
@@ -137,7 +137,7 @@ func (a appAdmin) UpdateConfig(claims *tokenauth.Claims, id string, item Config)
 }
 
 // DeleteConfig removes an existing config if the user has appropriate access
-func (a appAdmin) DeleteConfig(claims *tokenauth.Claims, id string) error {
+func (a appAdmin[T]) DeleteConfig(claims *tokenauth.Claims, id string) error {
 	config, err := a.app.Storage.FindConfigByID(id)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, TypeConfig, nil, err)
