@@ -19,31 +19,30 @@ const (
 	openapi3FormatFloat    string = "float"
 )
 
-// PrivateAPIHandler defined for API handler with authorization for calling core functions
-type PrivateAPIHandler func(*tokenauth.Claims, map[string]interface{}, interface{}) (interface{}, error)
-
-// PublicAPIHandler defined for API handler no authorization for calling core functions
-type PublicAPIHandler func(map[string]interface{}, interface{}) (interface{}, error)
-
-type apiHandler[A apiDataType, R requestDataType, S requestDataType] struct {
+// APIHandler represents a set of objects and functions that are needed to respond to an incoming request
+type APIHandler[A APIDataType, R RequestDataType, S RequestDataType] struct {
 	authorization   tokenauth.Handler
 	conversionFunc  func(*tokenauth.Claims, *R) (*S, error)
 	messageDataType logutils.MessageDataType
 
-	getHandler     func(*tokenauth.Claims, map[string]interface{}) (*A, error)
-	getManyHandler func(*tokenauth.Claims, map[string]interface{}) ([]A, error)
-	saveHandler    func(*tokenauth.Claims, map[string]interface{}, *S) (*A, error)
-	deleteHandler  func(*tokenauth.Claims, map[string]interface{}) error
+	getHandler              func(*tokenauth.Claims, map[string]interface{}) (*A, error)
+	getManyHandler          func(*tokenauth.Claims, map[string]interface{}) ([]A, error)
+	getNoParamHandler       func(*tokenauth.Claims) (*A, error)
+	getPublicHandler        func(map[string]interface{}) (*A, error)
+	getPublicNoParamHandler func() (*A, error)
+
+	saveHandler        func(*tokenauth.Claims, map[string]interface{}, *S) (*A, error)
+	saveNoParamHandler func(*tokenauth.Claims, *S) (*A, error)
+
+	deleteHandler func(*tokenauth.Claims, map[string]interface{}) error
 }
 
 type openapi3Type interface {
 	string | int | float64 | bool | time.Time
 }
 
-/* Replaces wrapFunc by taking in authorization and the core function corresponding to the path
-*  The obj pointer represents the pointer of the type of the request body
- */
-func handleRequest[A apiDataType, R requestDataType, S requestDataType](handler *apiHandler[A, R, S], paths map[string]*openapi3.PathItem, logger *logs.Logger) http.HandlerFunc {
+// HandleRequest responds to an incoming request by logging it, performing authorization checks, and calling the registered handler function
+func (h *APIHandler[A, R, S]) HandleRequest(paths map[string]*openapi3.PathItem, logger *logs.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		logObj := logger.NewRequestLog(req)
 		logObj.RequestReceived()
@@ -61,8 +60,8 @@ func handleRequest[A apiDataType, R requestDataType, S requestDataType](handler 
 
 		var responseStatus int
 		var claims *tokenauth.Claims
-		if handler.authorization != nil {
-			responseStatus, claims, err = handler.authorization.Check(req)
+		if h.authorization != nil {
+			responseStatus, claims, err = h.authorization.Check(req)
 			if err != nil {
 				logObj.SendHTTPResponse(w, logObj.HTTPResponseErrorAction(logutils.ActionValidate, logutils.TypeRequest, nil, err, responseStatus, true))
 				return
@@ -76,13 +75,13 @@ func handleRequest[A apiDataType, R requestDataType, S requestDataType](handler 
 		var response logs.HTTPResponse
 		switch req.Method {
 		case http.MethodGet:
-			response = handle[A, R, S](req, handler, claims, path.Get, logObj)
+			response = h.handle(req, claims, path.Get, logObj)
 		case http.MethodPost:
-			response = handle[A, R, S](req, handler, claims, path.Post, logObj)
+			response = h.handle(req, claims, path.Post, logObj)
 		case http.MethodPut:
-			response = handle[A, R, S](req, handler, claims, path.Put, logObj)
+			response = h.handle(req, claims, path.Put, logObj)
 		case http.MethodDelete:
-			response = handle[A, R, S](req, handler, claims, path.Delete, logObj)
+			response = h.handle(req, claims, path.Delete, logObj)
 		default:
 			response = logObj.HTTPResponseErrorData(logutils.StatusInvalid, "method", nil, nil, http.StatusMethodNotAllowed, true)
 		}
@@ -92,11 +91,44 @@ func handleRequest[A apiDataType, R requestDataType, S requestDataType](handler 
 	}
 }
 
+// SetCoreHandler sets the correct function field in handler by the function prototype of coreFunc
+func (h *APIHandler[A, R, S]) SetCoreHandler(coreFunc interface{}, method string, tag string, ref string) error {
+	ok := false
+	switch method {
+	case http.MethodGet:
+		h.getHandler, ok = coreFunc.(func(*tokenauth.Claims, map[string]interface{}) (*A, error))
+		if !ok {
+			h.getManyHandler, ok = coreFunc.(func(*tokenauth.Claims, map[string]interface{}) ([]A, error))
+		}
+		if !ok {
+			h.getNoParamHandler, ok = coreFunc.(func(*tokenauth.Claims) (*A, error))
+		}
+		if !ok {
+			h.getPublicHandler, ok = coreFunc.(func(map[string]interface{}) (*A, error))
+		}
+		if !ok {
+			h.getPublicNoParamHandler, ok = coreFunc.(func() (*A, error))
+		}
+	case http.MethodPost, http.MethodPut:
+		h.saveHandler, ok = coreFunc.(func(*tokenauth.Claims, map[string]interface{}, *S) (*A, error))
+		if !ok {
+			h.saveNoParamHandler, ok = coreFunc.(func(*tokenauth.Claims, *S) (*A, error))
+		}
+	case http.MethodDelete:
+		h.deleteHandler, ok = coreFunc.(func(*tokenauth.Claims, map[string]interface{}) error)
+	}
+	if !ok {
+		return errors.ErrorData(logutils.StatusInvalid, "core function", &logutils.FieldArgs{"name": tag + "." + ref, "method": method})
+	}
+
+	return nil
+}
+
 /* Replaces api_ file functions by parsing parameters and request body
 *  and calling the core function
 *  The obj pointer represent the defined model for the request body or response
  */
-func handle[A apiDataType, R requestDataType, S requestDataType](r *http.Request, handler *apiHandler[A, R, S], claims *tokenauth.Claims, operation *openapi3.Operation, l *logs.Log) logs.HTTPResponse {
+func (h *APIHandler[A, R, S]) handle(r *http.Request, claims *tokenauth.Claims, operation *openapi3.Operation, l *logs.Log) logs.HTTPResponse {
 	paramMap, response := getParams(l, r, operation.Parameters)
 	if response != nil {
 		return *response
@@ -105,14 +137,14 @@ func handle[A apiDataType, R requestDataType, S requestDataType](r *http.Request
 	var data *S
 	var err error
 	if operation.RequestBody != nil {
-		if handler.conversionFunc != nil {
+		if h.conversionFunc != nil {
 			var requestBody R
 			err = json.NewDecoder(r.Body).Decode(&requestBody)
 			if err != nil {
 				return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
 			}
 
-			data, err = handler.conversionFunc(claims, &requestBody)
+			data, err = h.conversionFunc(claims, &requestBody)
 			if err != nil {
 				return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
 			}
@@ -132,28 +164,36 @@ func handle[A apiDataType, R requestDataType, S requestDataType](r *http.Request
 	switch r.Method {
 	case http.MethodGet:
 		actionType = logutils.ActionGet
-		if handler.getManyHandler != nil {
-			obj, err = handler.getManyHandler(claims, paramMap)
-		} else if handler.getHandler != nil {
-			obj, err = handler.getHandler(claims, paramMap)
+		if h.getManyHandler != nil {
+			obj, err = h.getManyHandler(claims, paramMap)
+		} else if h.getHandler != nil {
+			obj, err = h.getHandler(claims, paramMap)
+		} else if h.getNoParamHandler != nil {
+			obj, err = h.getNoParamHandler(claims)
+		} else if h.getPublicHandler != nil {
+			obj, err = h.getPublicHandler(paramMap)
+		} else if h.getPublicNoParamHandler != nil {
+			obj, err = h.getPublicNoParamHandler()
 		}
 	case http.MethodPost, http.MethodPut:
 		actionType = logutils.ActionSave
-		if handler.saveHandler != nil {
-			obj, err = handler.saveHandler(claims, paramMap, data)
+		if h.saveHandler != nil {
+			obj, err = h.saveHandler(claims, paramMap, data)
+		} else if h.saveNoParamHandler != nil {
+			obj, err = h.saveNoParamHandler(claims, data)
 		}
 	case http.MethodDelete:
 		actionType = logutils.ActionDelete
-		if handler.deleteHandler != nil {
-			err = handler.deleteHandler(claims, paramMap)
+		if h.deleteHandler != nil {
+			err = h.deleteHandler(claims, paramMap)
 		}
 	default:
 		err = errors.ErrorData(logutils.StatusMissing, "api handler", &logutils.FieldArgs{"public": claims == nil})
-		return l.HTTPResponseErrorAction(actionType, handler.messageDataType, nil, err, http.StatusInternalServerError, false)
+		return l.HTTPResponseErrorAction(actionType, h.messageDataType, nil, err, http.StatusInternalServerError, false)
 	}
 
 	if err != nil {
-		return l.HTTPResponseErrorAction(actionType, handler.messageDataType, nil, err, http.StatusInternalServerError, true)
+		return l.HTTPResponseErrorAction(actionType, h.messageDataType, nil, err, http.StatusInternalServerError, true)
 	}
 	if (obj == (*A)(nil) || obj == nil) && r.Method != http.MethodGet {
 		return l.HTTPResponseSuccess()
@@ -170,24 +210,10 @@ func handle[A apiDataType, R requestDataType, S requestDataType](r *http.Request
 	return l.HTTPResponseSuccessJSON(responseData)
 }
 
-func setCoreHandler[A apiDataType, R requestDataType, S requestDataType](handler *apiHandler[A, R, S], coreFunc interface{}, method string, tag string, ref string) error {
-	ok := false
-	switch method {
-	case http.MethodGet:
-		handler.getHandler, ok = coreFunc.(func(*tokenauth.Claims, map[string]interface{}) (*A, error))
-		if !ok {
-			handler.getManyHandler, ok = coreFunc.(func(*tokenauth.Claims, map[string]interface{}) ([]A, error))
-		}
-	case http.MethodPost, http.MethodPut:
-		handler.saveHandler, ok = coreFunc.(func(*tokenauth.Claims, map[string]interface{}, *S) (*A, error))
-	case http.MethodDelete:
-		handler.deleteHandler, ok = coreFunc.(func(*tokenauth.Claims, map[string]interface{}) error)
-	}
-	if !ok {
-		return errors.ErrorData(logutils.StatusInvalid, "core function", &logutils.FieldArgs{"name": tag + "." + ref, "method": method})
-	}
-
-	return nil
+// NewAPIHandler creates a new APIHandler object
+func NewAPIHandler[A APIDataType, R RequestDataType, S RequestDataType](authorization tokenauth.Handler,
+	conversionFunc func(*tokenauth.Claims, *R) (*S, error), messageDataType logutils.MessageDataType) APIHandler[A, R, S] {
+	return APIHandler[A, R, S]{authorization: authorization, conversionFunc: conversionFunc, messageDataType: messageDataType}
 }
 
 /*

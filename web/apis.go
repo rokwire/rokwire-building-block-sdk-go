@@ -10,19 +10,19 @@ import (
 )
 
 // APIsHandler handles the rest APIs implementation
-type APIsHandler struct {
-	app *common.Application
+type APIsHandler[T common.Storage] struct {
+	app *common.Application[T]
 }
 
 // Default
 
-func (a APIsHandler) defaultGetVersion(claims *tokenauth.Claims, params map[string]interface{}) (*string, error) {
+func (a APIsHandler[T]) defaultGetVersion(claims *tokenauth.Claims, params map[string]interface{}) (*string, error) {
 	return a.app.Default.GetVersion()
 }
 
 // Admin
 
-func (a APIsHandler) adminGetConfigs(claims *tokenauth.Claims, params map[string]interface{}) ([]common.Config, error) {
+func (a APIsHandler[T]) adminGetConfigs(claims *tokenauth.Claims, params map[string]interface{}) ([]common.Config, error) {
 	configType, err := rokwireutils.GetValue[*string](params, "config_type", false)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, logutils.TypePathParam, logutils.StringArgs("config_type"), err)
@@ -31,11 +31,11 @@ func (a APIsHandler) adminGetConfigs(claims *tokenauth.Claims, params map[string
 	return a.app.Admin.GetConfigs(claims, configType)
 }
 
-func (a APIsHandler) adminCreateConfig(claims *tokenauth.Claims, params map[string]interface{}, item *common.Config) (*common.Config, error) {
+func (a APIsHandler[T]) adminCreateConfig(claims *tokenauth.Claims, params map[string]interface{}, item *common.Config) (*common.Config, error) {
 	return a.app.Admin.CreateConfig(claims, *item)
 }
 
-func (a APIsHandler) adminGetConfig(claims *tokenauth.Claims, params map[string]interface{}) (*common.Config, error) {
+func (a APIsHandler[T]) adminGetConfig(claims *tokenauth.Claims, params map[string]interface{}) (*common.Config, error) {
 	id, err := rokwireutils.GetValue[string](params, "id", true)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, logutils.TypePathParam, logutils.StringArgs("id"), err)
@@ -44,7 +44,7 @@ func (a APIsHandler) adminGetConfig(claims *tokenauth.Claims, params map[string]
 	return a.app.Admin.GetConfig(claims, id)
 }
 
-func (a APIsHandler) adminUpdateConfig(claims *tokenauth.Claims, params map[string]interface{}, item *common.Config) (*common.Config, error) {
+func (a APIsHandler[T]) adminUpdateConfig(claims *tokenauth.Claims, params map[string]interface{}, item *common.Config) (*common.Config, error) {
 	id, err := rokwireutils.GetValue[string](params, "id", true)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, logutils.TypePathParam, logutils.StringArgs("id"), err)
@@ -53,7 +53,7 @@ func (a APIsHandler) adminUpdateConfig(claims *tokenauth.Claims, params map[stri
 	return a.app.Admin.UpdateConfig(claims, id, *item)
 }
 
-func (a APIsHandler) adminDeleteConfig(claims *tokenauth.Claims, params map[string]interface{}) error {
+func (a APIsHandler[T]) adminDeleteConfig(claims *tokenauth.Claims, params map[string]interface{}) error {
 	id, err := rokwireutils.GetValue[string](params, "id", true)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionGet, logutils.TypePathParam, logutils.StringArgs("id"), err)
@@ -63,6 +63,6 @@ func (a APIsHandler) adminDeleteConfig(claims *tokenauth.Claims, params map[stri
 }
 
 // NewAPIsHandler creates new API handler instance
-func NewAPIsHandler(app *common.Application) APIsHandler {
-	return APIsHandler{app: app}
+func NewAPIsHandler[T common.Storage](app *common.Application[T]) APIsHandler[T] {
+	return APIsHandler[T]{app: app}
 }

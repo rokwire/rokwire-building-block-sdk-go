@@ -27,11 +27,11 @@ import (
 
 // Auth handler
 type Auth struct {
-	client tokenauth.Handlers
-	admin  tokenauth.Handlers
-	bbs    tokenauth.Handlers
-	tps    tokenauth.Handlers
-	system tokenauth.Handlers
+	Client tokenauth.Handlers
+	Admin  tokenauth.Handlers
+	BBs    tokenauth.Handlers
+	TPS    tokenauth.Handlers
+	System tokenauth.Handlers
 }
 
 // NewAuth creates new auth handler
@@ -67,11 +67,11 @@ func NewAuth(serviceRegManager *auth.ServiceRegManager) (*Auth, error) {
 	systemHandlers := tokenauth.NewHandlers(system)
 
 	auth := Auth{
-		client: clientHandlers,
-		admin:  adminHandlers,
-		bbs:    bbsHandlers,
-		tps:    tpsHandlers,
-		system: systemHandlers,
+		Client: clientHandlers,
+		Admin:  adminHandlers,
+		BBs:    bbsHandlers,
+		TPS:    tpsHandlers,
+		System: systemHandlers,
 	}
 	return &auth, nil
 }

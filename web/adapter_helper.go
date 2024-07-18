@@ -10,19 +10,19 @@ import (
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 )
 
-// apiDataType represents any stored data type that may be read/written by an API
-type apiDataType interface {
+// APIDataType represents any stored data type that may be read/written by an API
+type APIDataType interface {
 	string |
 		common.Config
 }
 
-// requestDataType represents any data type that may be sent in an API request body
-type requestDataType interface {
-	apiDataType |
+// RequestDataType represents any data type that may be sent in an API request body
+type RequestDataType interface {
+	APIDataType |
 		adminReqUpdateConfigs
 }
 
-func (a *Adapter) registerHandler(router *mux.Router, pathStr string, method string, tag string, coreFunc string, dataType string, authType interface{},
+func (a *Adapter[T]) registerHandler(router *mux.Router, pathStr string, method string, tag string, coreFunc string, dataType string, authType interface{},
 	requestBody interface{}, conversionFunc interface{}) error {
 	authorization, err := a.getAuthHandler(tag, authType)
 	if err != nil {
@@ -44,13 +44,13 @@ func (a *Adapter) registerHandler(router *mux.Router, pathStr string, method str
 
 	switch dataType {
 	case "string":
-		handler := apiHandler[string, string, string]{authorization: authorization, messageDataType: logutils.MessageDataType(dataType)}
-		err = setCoreHandler[string, string, string](&handler, coreHandler, method, tag, coreFunc)
+		handler := NewAPIHandler[string, string, string](authorization, nil, logutils.MessageDataType(dataType))
+		err = handler.SetCoreHandler(coreHandler, method, tag, coreFunc)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionApply, "api core handler", &logutils.FieldArgs{"name": tag + "." + coreFunc}, err)
 		}
 
-		router.HandleFunc(pathStr, handleRequest[string, string, string](&handler, a.paths, a.logger)).Methods(method)
+		router.HandleFunc(pathStr, handler.HandleRequest(a.Paths, a.Logger)).Methods(method)
 	case "common.Config":
 		switch requestBody {
 		case "#/components/schemas/_admin_req_update_configs":
@@ -59,21 +59,21 @@ func (a *Adapter) registerHandler(router *mux.Router, pathStr string, method str
 				return errors.ErrorData(logutils.StatusInvalid, "request body conversion function", &logutils.FieldArgs{"x-conversion-function": conversionFunc})
 			}
 
-			handler := apiHandler[common.Config, adminReqUpdateConfigs, common.Config]{authorization: authorization, conversionFunc: convert, messageDataType: common.TypeConfig}
-			err = setCoreHandler[common.Config, adminReqUpdateConfigs, common.Config](&handler, coreHandler, method, tag, coreFunc)
+			handler := NewAPIHandler[common.Config, adminReqUpdateConfigs, common.Config](authorization, convert, common.TypeConfig)
+			err = handler.SetCoreHandler(coreHandler, method, tag, coreFunc)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionApply, "api core handler", &logutils.FieldArgs{"name": tag + "." + coreFunc}, err)
 			}
 
-			router.HandleFunc(pathStr, handleRequest[common.Config, adminReqUpdateConfigs, common.Config](&handler, a.paths, a.logger)).Methods(method)
+			router.HandleFunc(pathStr, handler.HandleRequest(a.Paths, a.Logger)).Methods(method)
 		default:
-			handler := apiHandler[common.Config, common.Config, common.Config]{authorization: authorization, messageDataType: common.TypeConfig}
-			err = setCoreHandler[common.Config, common.Config, common.Config](&handler, coreHandler, method, tag, coreFunc)
+			handler := NewAPIHandler[common.Config, common.Config, common.Config](authorization, nil, common.TypeConfig)
+			err = handler.SetCoreHandler(coreHandler, method, tag, coreFunc)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionApply, "api core handler", &logutils.FieldArgs{"name": tag + "." + coreFunc}, err)
 			}
 
-			router.HandleFunc(pathStr, handleRequest[common.Config, common.Config, common.Config](&handler, a.paths, a.logger)).Methods(method)
+			router.HandleFunc(pathStr, handler.HandleRequest(a.Paths, a.Logger)).Methods(method)
 		}
 	default:
 		return errors.ErrorData(logutils.StatusInvalid, "data type reference", nil)
@@ -82,7 +82,7 @@ func (a *Adapter) registerHandler(router *mux.Router, pathStr string, method str
 	return nil
 }
 
-func (a *Adapter) getAuthHandler(tag string, ref interface{}) (tokenauth.Handler, error) {
+func (a *Adapter[T]) getAuthHandler(tag string, ref interface{}) (tokenauth.Handler, error) {
 	if ref == nil {
 		return nil, nil
 	}
@@ -90,15 +90,15 @@ func (a *Adapter) getAuthHandler(tag string, ref interface{}) (tokenauth.Handler
 	var handler tokenauth.Handlers
 	switch tag {
 	case "Client":
-		handler = a.auth.client
+		handler = a.Auth.Client
 	case "Admin":
-		handler = a.auth.admin
+		handler = a.Auth.Admin
 	case "BBs":
-		handler = a.auth.bbs
+		handler = a.Auth.BBs
 	case "TPS":
-		handler = a.auth.tps
+		handler = a.Auth.TPS
 	case "System":
-		handler = a.auth.system
+		handler = a.Auth.System
 	default:
 		return nil, errors.ErrorData(logutils.StatusInvalid, "tag", &logutils.FieldArgs{"tag": tag})
 	}
@@ -117,26 +117,26 @@ func (a *Adapter) getAuthHandler(tag string, ref interface{}) (tokenauth.Handler
 	}
 }
 
-func (a *Adapter) getCoreHandler(tag string, ref string) (interface{}, error) {
+func (a *Adapter[T]) getCoreHandler(tag string, ref string) (interface{}, error) {
 	switch tag + ref {
-	// case "DefaultGetVersion":
-	// 	return a.apisHandler.defaultGetVersion, nil
-	// case "AdminGetConfigs":
-	// 	return a.apisHandler.adminGetConfigs, nil
-	// case "AdminCreateConfig":
-	// 	return a.apisHandler.adminCreateConfig, nil
-	// case "AdminGetConfig":
-	// 	return a.apisHandler.adminGetConfig, nil
-	// case "AdminUpdateConfig":
-	// 	return a.apisHandler.adminUpdateConfig, nil
-	// case "AdminDeleteConfig":
-	// 	return a.apisHandler.adminDeleteConfig, nil
+	case "DefaultGetVersion":
+		return a.apisHandler.defaultGetVersion, nil
+	case "AdminGetConfigs":
+		return a.apisHandler.adminGetConfigs, nil
+	case "AdminCreateConfig":
+		return a.apisHandler.adminCreateConfig, nil
+	case "AdminGetConfig":
+		return a.apisHandler.adminGetConfig, nil
+	case "AdminUpdateConfig":
+		return a.apisHandler.adminUpdateConfig, nil
+	case "AdminDeleteConfig":
+		return a.apisHandler.adminDeleteConfig, nil
 	default:
 		return nil, errors.ErrorData(logutils.StatusInvalid, "core function", logutils.StringArgs(tag+ref))
 	}
 }
 
-func (a *Adapter) getConversionFunc(ref interface{}) (interface{}, error) {
+func (a *Adapter[T]) getConversionFunc(ref interface{}) (interface{}, error) {
 	if ref == nil {
 		return nil, nil
 	}

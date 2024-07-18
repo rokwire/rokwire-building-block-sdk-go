@@ -49,26 +49,24 @@ const (
 )
 
 // Adapter entity
-type Adapter struct {
+type Adapter[T common.Storage] struct {
 	baseURL   string
 	port      string
 	serviceID string
 
-	auth *Auth
+	Auth *Auth
 
 	docsYAMLPath  string
 	cachedYamlDoc []byte
-	paths         map[string]*openapi3.PathItem
+	Paths         map[string]*openapi3.PathItem
 
-	apisHandler APIsHandler
+	apisHandler APIsHandler[T]
 
-	app *common.Application
-
-	logger *logs.Logger
+	Logger *logs.Logger
 }
 
 // Start starts the module
-func (a *Adapter) Start() {
+func (a *Adapter[T]) Start() {
 
 	router := mux.NewRouter().StrictSlash(true)
 
@@ -79,15 +77,15 @@ func (a *Adapter) Start() {
 
 	err := a.routeAPIs(router)
 	if err != nil {
-		a.logger.Fatal(err.Error())
+		a.Logger.Fatal(err.Error())
 	}
 
-	a.logger.Fatalf("Error serving: %v", http.ListenAndServe(":"+a.port, router))
+	a.Logger.Fatalf("Error serving: %v", http.ListenAndServe(":"+a.port, router))
 }
 
 // routeAPIs calls registerHandler for every path specified as auto-generated in docs
-func (a *Adapter) routeAPIs(router *mux.Router) error {
-	for path, pathItem := range a.paths {
+func (a *Adapter[T]) routeAPIs(router *mux.Router) error {
+	for path, pathItem := range a.Paths {
 		operations := map[string]*openapi3.Operation{
 			http.MethodGet:    pathItem.Get,
 			http.MethodPost:   pathItem.Post,
@@ -119,12 +117,10 @@ func (a *Adapter) routeAPIs(router *mux.Router) error {
 		}
 	}
 
-	//TODO: setup configs endpoints
-
 	return nil
 }
 
-func (a *Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
+func (a *Adapter[T]) serveDoc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("access-control-allow-origin", "*")
 
 	if a.cachedYamlDoc != nil {
@@ -134,14 +130,14 @@ func (a *Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *Adapter) serveDocUI() http.Handler {
+func (a *Adapter[T]) serveDocUI() http.Handler {
 	url := fmt.Sprintf("%s/doc", a.baseURL)
 	return httpSwagger.Handler(httpSwagger.URL(url))
 }
 
 // NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(port string, serviceID string, app *common.Application, docsYAMLPath string, baseServerURL string, prodServerURL string,
-	testServerURL string, devServerURL string, serviceRegManager *auth.ServiceRegManager, logger *logs.Logger) Adapter {
+func NewWebAdapter[T common.Storage](port string, serviceID string, app *common.Application[T], docsYAMLPath string, baseServerURL string, prodServerURL string,
+	testServerURL string, devServerURL string, serviceRegManager *auth.ServiceRegManager, logger *logs.Logger) Adapter[T] {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 
@@ -187,8 +183,8 @@ func NewWebAdapter(port string, serviceID string, app *common.Application, docsY
 	}
 
 	apisHandler := NewAPIsHandler(app)
-	return Adapter{baseURL: baseServerURL, port: port, serviceID: serviceID, cachedYamlDoc: yamlDoc, docsYAMLPath: docsYAMLPath,
-		auth: auth, paths: paths, apisHandler: apisHandler, app: app, logger: logger}
+	return Adapter[T]{baseURL: baseServerURL, port: port, serviceID: serviceID, cachedYamlDoc: yamlDoc, docsYAMLPath: docsYAMLPath,
+		Auth: auth, Paths: paths, apisHandler: apisHandler, Logger: logger}
 }
 
 func mergeDocsYAML(doc *openapi3.T, baseDoc *openapi3.T, serviceID string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string) error {
