@@ -35,32 +35,33 @@ type Auth struct {
 }
 
 // NewAuth creates new auth handler
-func NewAuth(serviceRegManager *auth.ServiceRegManager) (*Auth, error) {
-	client, err := newClientAuth(serviceRegManager)
+func NewAuth(serviceRegManager *auth.ServiceRegManager, clientAuthPermissionPolicyPath string, clientAuthScopePolicyPath string,
+	adminAuthPermissionPolicyPath string, bbsAuthPermissionPolicyPath string, tpsAuthPermissionPolicyPath string, systemAuthPermissionPolicyPath string) (*Auth, error) {
+	client, err := newClientAuth(serviceRegManager, clientAuthPermissionPolicyPath, clientAuthScopePolicyPath)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, "client auth", nil, err)
 	}
 	clientHandlers := tokenauth.NewHandlers(client)
 
-	admin, err := newAdminAuth(serviceRegManager)
+	admin, err := newAdminAuth(serviceRegManager, adminAuthPermissionPolicyPath)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, "admin auth", nil, err)
 	}
 	adminHandlers := tokenauth.NewHandlers(admin)
 
-	bbs, err := newBBsAuth(serviceRegManager)
+	bbs, err := newBBsAuth(serviceRegManager, bbsAuthPermissionPolicyPath)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, "bbs auth", nil, err)
 	}
 	bbsHandlers := tokenauth.NewHandlers(bbs)
 
-	tps, err := newTPSAuth(serviceRegManager)
+	tps, err := newTPSAuth(serviceRegManager, tpsAuthPermissionPolicyPath)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, "tps auth", nil, err)
 	}
 	tpsHandlers := tokenauth.NewHandlers(tps)
 
-	system, err := newSystemAuth(serviceRegManager)
+	system, err := newSystemAuth(serviceRegManager, systemAuthPermissionPolicyPath)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, "system auth", nil, err)
 	}
@@ -78,9 +79,9 @@ func NewAuth(serviceRegManager *auth.ServiceRegManager) (*Auth, error) {
 
 ///////
 
-func newClientAuth(serviceRegManager *auth.ServiceRegManager) (*tokenauth.StandardHandler, error) {
-	clientPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/client_permission_policy.csv")
-	clientScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/client_scope_policy.csv", serviceRegManager.AuthService.ServiceID)
+func newClientAuth(serviceRegManager *auth.ServiceRegManager, clientAuthPermissionPolicyPath string, clientAuthScopePolicyPath string) (*tokenauth.StandardHandler, error) {
+	clientPermissionAuth := authorization.NewCasbinStringAuthorization(clientAuthPermissionPolicyPath)
+	clientScopeAuth := authorization.NewCasbinScopeAuthorization(clientAuthScopePolicyPath, serviceRegManager.AuthService.ServiceID)
 	clientTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, clientPermissionAuth, clientScopeAuth)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, "client token auth", nil, err)
@@ -101,8 +102,8 @@ func newClientAuth(serviceRegManager *auth.ServiceRegManager) (*tokenauth.Standa
 	return auth, nil
 }
 
-func newAdminAuth(serviceRegManager *auth.ServiceRegManager) (*tokenauth.StandardHandler, error) {
-	adminPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/admin_permission_policy.csv")
+func newAdminAuth(serviceRegManager *auth.ServiceRegManager, adminAuthPermissionPolicyPath string) (*tokenauth.StandardHandler, error) {
+	adminPermissionAuth := authorization.NewCasbinStringAuthorization(adminAuthPermissionPolicyPath)
 	adminTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, adminPermissionAuth, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, "admin token auth", nil, err)
@@ -120,8 +121,8 @@ func newAdminAuth(serviceRegManager *auth.ServiceRegManager) (*tokenauth.Standar
 	return auth, nil
 }
 
-func newBBsAuth(serviceRegManager *auth.ServiceRegManager) (*tokenauth.StandardHandler, error) {
-	bbsPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/bbs_permission_policy.csv")
+func newBBsAuth(serviceRegManager *auth.ServiceRegManager, bbsAuthPermissionPolicyPath string) (*tokenauth.StandardHandler, error) {
+	bbsPermissionAuth := authorization.NewCasbinStringAuthorization(bbsAuthPermissionPolicyPath)
 	bbsTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, bbsPermissionAuth, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "bbs token auth", nil, err)
@@ -143,8 +144,8 @@ func newBBsAuth(serviceRegManager *auth.ServiceRegManager) (*tokenauth.StandardH
 	return auth, nil
 }
 
-func newTPSAuth(serviceRegManager *auth.ServiceRegManager) (*tokenauth.StandardHandler, error) {
-	tpsPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/tps_permission_policy.csv")
+func newTPSAuth(serviceRegManager *auth.ServiceRegManager, tpsAuthPermissionPolicyPath string) (*tokenauth.StandardHandler, error) {
+	tpsPermissionAuth := authorization.NewCasbinStringAuthorization(tpsAuthPermissionPolicyPath)
 	tpsTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, tpsPermissionAuth, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "tps token auth", nil, err)
@@ -166,8 +167,8 @@ func newTPSAuth(serviceRegManager *auth.ServiceRegManager) (*tokenauth.StandardH
 	return auth, nil
 }
 
-func newSystemAuth(serviceRegManager *auth.ServiceRegManager) (*tokenauth.StandardHandler, error) {
-	systemPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/system_permission_policy.csv")
+func newSystemAuth(serviceRegManager *auth.ServiceRegManager, systemAuthPermissionPolicyPath string) (*tokenauth.StandardHandler, error) {
+	systemPermissionAuth := authorization.NewCasbinStringAuthorization(systemAuthPermissionPolicyPath)
 	systemTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, systemPermissionAuth, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, "system token auth", nil, err)

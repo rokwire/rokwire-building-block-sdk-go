@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -28,6 +30,7 @@ import (
 
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/common"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/tokenauth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
@@ -48,6 +51,31 @@ const (
 	openapi3SectionServers string = "servers"
 )
 
+var (
+	_, b, _, _ = runtime.Caller(0)
+	basepath   = filepath.Dir(b)
+)
+
+// AdapterConfig is an object used to configure an Adapter
+type AdapterConfig struct {
+	// server URLs
+	BaseServerURL string
+	ProdServerURL string
+	TestServerURL string
+	DevServerURL  string
+
+	// API docs path
+	DocsYAMLPath string
+
+	// auth policy paths
+	ClientAuthPermissionPolicyPath string
+	ClientAuthScopePolicyPath      string
+	AdminAuthPermissionPolicyPath  string
+	BBsAuthPermissionPolicyPath    string
+	TPSAuthPermissionPolicyPath    string
+	SystemAuthPermissionPolicyPath string
+}
+
 // Adapter entity
 type Adapter[T common.Storage] struct {
 	baseURL   string
@@ -57,12 +85,18 @@ type Adapter[T common.Storage] struct {
 	Auth *Auth
 
 	docsYAMLPath  string
-	cachedYamlDoc []byte
+	cachedJSONDoc []byte
 	Paths         map[string]*openapi3.PathItem
 
 	apisHandler APIsHandler[T]
 
 	Logger *logs.Logger
+
+	// handler registration functions
+	RegisterHandlerFunc  func(*mux.Router, string, string, string, string, string, interface{}, interface{}, interface{}) error
+	AuthHandlerGetter    func(string, interface{}) (tokenauth.Handler, error)
+	CoreHandlerGetter    func(string, string) (interface{}, error)
+	ConversionFuncGetter func(interface{}) (interface{}, error)
 }
 
 // Start starts the module
@@ -123,8 +157,8 @@ func (a *Adapter[T]) routeAPIs(router *mux.Router) error {
 func (a *Adapter[T]) serveDoc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("access-control-allow-origin", "*")
 
-	if a.cachedYamlDoc != nil {
-		http.ServeContent(w, r, "", time.Now(), bytes.NewReader([]byte(a.cachedYamlDoc)))
+	if a.cachedJSONDoc != nil {
+		http.ServeContent(w, r, "", time.Now(), bytes.NewReader([]byte(a.cachedJSONDoc)))
 	} else {
 		http.ServeFile(w, r, a.docsYAMLPath)
 	}
@@ -136,12 +170,12 @@ func (a *Adapter[T]) serveDocUI() http.Handler {
 }
 
 // NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter[T common.Storage](port string, serviceID string, app *common.Application[T], docsYAMLPath string, baseServerURL string, prodServerURL string,
-	testServerURL string, devServerURL string, serviceRegManager *auth.ServiceRegManager, logger *logs.Logger) Adapter[T] {
+func NewWebAdapter[T common.Storage](port string, serviceID string, app *common.Application[T], config AdapterConfig,
+	serviceRegManager *auth.ServiceRegManager, logger *logs.Logger) Adapter[T] {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 
-	yamlDoc, err := os.ReadFile(docsYAMLPath)
+	yamlDoc, err := os.ReadFile(config.DocsYAMLPath)
 	if err != nil {
 		logger.Fatalf("error reading docs file - %s", err.Error())
 	}
@@ -151,7 +185,7 @@ func NewWebAdapter[T common.Storage](port string, serviceID string, app *common.
 		logger.Fatalf("error loading docs yaml - %s", err.Error())
 	}
 
-	yamlBaseDoc, err := os.ReadFile("./web/docs/gen/def.yaml")
+	yamlBaseDoc, err := os.ReadFile(basepath + "/docs/gen/def.yaml")
 	if err != nil {
 		logger.Fatalf("error reading base docs file - %s", err.Error())
 	}
@@ -161,7 +195,7 @@ func NewWebAdapter[T common.Storage](port string, serviceID string, app *common.
 		logger.Fatalf("error loading base docs yaml - %s", err.Error())
 	}
 
-	err = mergeDocsYAML(doc, baseDoc, serviceID, baseServerURL, prodServerURL, testServerURL, devServerURL)
+	err = mergeDocsYAML(doc, baseDoc, serviceID, config.BaseServerURL, config.ProdServerURL, config.TestServerURL, config.DevServerURL)
 	if err != nil {
 		logger.Fatalf("error merging api docs - %s", err.Error())
 	}
@@ -170,6 +204,10 @@ func NewWebAdapter[T common.Storage](port string, serviceID string, app *common.
 	if err != nil {
 		logger.Fatalf("error on openapi3 validate - %s", err.Error())
 	}
+	mergedYamlDoc, err := doc.MarshalJSON()
+	if err != nil {
+		logger.Fatalf("error on marshal merged yaml doc - %s", err.Error())
+	}
 
 	//To correctly route traffic to base path, we must add to all paths since servers are ignored
 	paths := make(map[string]*openapi3.PathItem, doc.Paths.Len())
@@ -177,13 +215,14 @@ func NewWebAdapter[T common.Storage](port string, serviceID string, app *common.
 		paths["/"+serviceID+path] = obj
 	}
 
-	auth, err := NewAuth(serviceRegManager)
+	auth, err := NewAuth(serviceRegManager, config.ClientAuthPermissionPolicyPath, config.ClientAuthScopePolicyPath,
+		config.AdminAuthPermissionPolicyPath, config.BBsAuthPermissionPolicyPath, config.TPSAuthPermissionPolicyPath, config.SystemAuthPermissionPolicyPath)
 	if err != nil {
 		logger.Fatalf("error creating auth - %s", err.Error())
 	}
 
 	apisHandler := NewAPIsHandler(app)
-	return Adapter[T]{baseURL: baseServerURL, port: port, serviceID: serviceID, cachedYamlDoc: yamlDoc, docsYAMLPath: docsYAMLPath,
+	return Adapter[T]{baseURL: config.BaseServerURL, port: port, serviceID: serviceID, cachedJSONDoc: mergedYamlDoc, docsYAMLPath: config.DocsYAMLPath,
 		Auth: auth, Paths: paths, apisHandler: apisHandler, Logger: logger}
 }
 
@@ -229,13 +268,17 @@ func mergeDocsYAML(doc *openapi3.T, baseDoc *openapi3.T, serviceID string, baseS
 	}
 
 	// add base doc component schemas
-	configDataSchemas := make([]*openapi3.SchemaRef, 0)
 	for key, schema := range baseDoc.Components.Schemas {
 		if doc.Components.Schemas[key] == nil {
-			if strings.Contains(key, "ConfigData") {
-				configDataSchemas = append(configDataSchemas, schema)
-			}
 			doc.Components.Schemas[key] = schema
+		}
+	}
+
+	// set config data types
+	configDataSchemas := make([]*openapi3.SchemaRef, 0)
+	for key, schema := range doc.Components.Schemas {
+		if strings.Contains(key, "ConfigData") {
+			configDataSchemas = append(configDataSchemas, schema)
 		}
 	}
 

@@ -10,18 +10,6 @@ import (
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 )
 
-// APIDataType represents any stored data type that may be read/written by an API
-type APIDataType interface {
-	string |
-		common.Config
-}
-
-// RequestDataType represents any data type that may be sent in an API request body
-type RequestDataType interface {
-	APIDataType |
-		adminReqUpdateConfigs
-}
-
 func (a *Adapter[T]) registerHandler(router *mux.Router, pathStr string, method string, tag string, coreFunc string, dataType string, authType interface{},
 	requestBody interface{}, conversionFunc interface{}) error {
 	authorization, err := a.getAuthHandler(tag, authType)
@@ -76,7 +64,7 @@ func (a *Adapter[T]) registerHandler(router *mux.Router, pathStr string, method 
 			router.HandleFunc(pathStr, handler.HandleRequest(a.Paths, a.Logger)).Methods(method)
 		}
 	default:
-		return errors.ErrorData(logutils.StatusInvalid, "data type reference", nil)
+		return a.RegisterHandlerFunc(router, pathStr, method, tag, coreFunc, dataType, authType, requestBody, conversionFunc)
 	}
 
 	return nil
@@ -113,7 +101,7 @@ func (a *Adapter[T]) getAuthHandler(tag string, ref interface{}) (tokenauth.Hand
 	case "Permissions":
 		return handler.Permissions, nil
 	default:
-		return nil, errors.ErrorData(logutils.StatusInvalid, "authentication type reference", &logutils.FieldArgs{"ref": ref})
+		return a.AuthHandlerGetter(tag, ref)
 	}
 }
 
@@ -132,7 +120,7 @@ func (a *Adapter[T]) getCoreHandler(tag string, ref string) (interface{}, error)
 	case "AdminDeleteConfig":
 		return a.apisHandler.adminDeleteConfig, nil
 	default:
-		return nil, errors.ErrorData(logutils.StatusInvalid, "core function", logutils.StringArgs(tag+ref))
+		return a.CoreHandlerGetter(tag, ref)
 	}
 }
 
@@ -145,6 +133,6 @@ func (a *Adapter[T]) getConversionFunc(ref interface{}) (interface{}, error) {
 	case "configFromRequest":
 		return configFromRequest, nil
 	default:
-		return nil, errors.ErrorData(logutils.StatusInvalid, "conversion function reference", &logutils.FieldArgs{"ref": ref})
+		return a.ConversionFuncGetter(ref)
 	}
 }

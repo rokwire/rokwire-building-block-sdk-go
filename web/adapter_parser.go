@@ -20,7 +20,7 @@ const (
 )
 
 // APIHandler represents a set of objects and functions that are needed to respond to an incoming request
-type APIHandler[A APIDataType, R RequestDataType, S RequestDataType] struct {
+type APIHandler[A any, R any, S any] struct {
 	authorization   tokenauth.Handler
 	conversionFunc  func(*tokenauth.Claims, *R) (*S, error)
 	messageDataType logutils.MessageDataType
@@ -211,7 +211,7 @@ func (h *APIHandler[A, R, S]) handle(r *http.Request, claims *tokenauth.Claims, 
 }
 
 // NewAPIHandler creates a new APIHandler object
-func NewAPIHandler[A APIDataType, R RequestDataType, S RequestDataType](authorization tokenauth.Handler,
+func NewAPIHandler[A any, R any, S any](authorization tokenauth.Handler,
 	conversionFunc func(*tokenauth.Claims, *R) (*S, error), messageDataType logutils.MessageDataType) APIHandler[A, R, S] {
 	return APIHandler[A, R, S]{authorization: authorization, conversionFunc: conversionFunc, messageDataType: messageDataType}
 }
