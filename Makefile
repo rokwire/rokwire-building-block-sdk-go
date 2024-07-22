@@ -108,6 +108,13 @@ oapi-gen-types: ;
 oapi-gen-docs: ;
 	swagger-cli bundle web/docs/index.yaml --outfile web/docs/gen/def.yaml --type yaml
 
+.PHONY: gen-apis
+gen-apis: ; $(info $(M) generating api handlers...) @ ## Generate API handlers and fix formatting on generated files
+	python3 api-generator/generator/main.py
+	$(GOFMT) -l -w $(BASE)/web/adapter_helper.go
+	$(GOFMT) -l -w $(BASE)/web/apis.go
+	$(GOFMT) -l -w $(BASE)/services/common/apis.go
+
 .PHONY: log-variables
 log-variables: ; $(info $(M) logging variables...) @ ## Log the variables values
 	@echo "DATE:"$(DATE)

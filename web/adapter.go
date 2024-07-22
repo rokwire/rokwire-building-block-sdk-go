@@ -47,8 +47,6 @@ const (
 	xAuthType string = "x-authentication-type"
 	// xConversionFunction defines the conversion function from docs
 	xConversionFunction string = "x-conversion-function"
-
-	openapi3SectionServers string = "servers"
 )
 
 var (
@@ -282,15 +280,19 @@ func mergeDocsYAML(doc *openapi3.T, baseDoc *openapi3.T, serviceID string, baseS
 		}
 	}
 
-	configSchema := doc.Components.Schemas["Config"]
-	if configSchema != nil {
-		configDataSchema := configSchema.Value.Properties["data"]
-		if configDataSchema != nil {
-			anyOf := make(openapi3.SchemaRefs, 0)
-			for _, configDataSchema := range configDataSchemas {
-				anyOf = append(anyOf, configDataSchema)
+	for key, schema := range doc.Components.Schemas {
+		if strings.Contains(strings.ToLower(key), "config") {
+			configDataSchema := schema.Value.Properties["data"]
+			if configDataSchema != nil {
+				hasAdditionalProperties := configDataSchema.Value.AdditionalProperties.Has != nil && *configDataSchema.Value.AdditionalProperties.Has
+				if hasAdditionalProperties {
+					anyOf := make(openapi3.SchemaRefs, 0)
+					for _, configDataSchema := range configDataSchemas {
+						anyOf = append(anyOf, configDataSchema)
+					}
+					configDataSchema.Value = &openapi3.Schema{AnyOf: anyOf}
+				}
 			}
-			configDataSchema.Value = &openapi3.Schema{AnyOf: anyOf}
 		}
 	}
 

@@ -17,5 +17,5 @@ properties:
   system:
     type: boolean
   data:
-    anyOf:
-      - $ref: "../../../application/EnvConfigData.yaml"
+    type: object
+    additionalProperties: true
