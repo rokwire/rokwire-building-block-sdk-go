@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rokwire/rokwire-building-block-sdk-go/internal/testutils"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization"
@@ -43,13 +43,13 @@ func setupTestTokenAuth(authService *auth.Service, acceptRokwire bool, mockLoade
 	return tokenauth.NewTokenAuth(acceptRokwire, manager, permissionAuth, scopeAuth)
 }
 
-func getTestClaims(sub string, aud string, orgID string, purpose string, issuer string, permissions string, scope string, auth_type string, exp int64) *tokenauth.Claims {
+func getTestClaims(sub string, aud []string, orgID string, purpose string, issuer string, permissions string, scope string, auth_type string, exp time.Time) *tokenauth.Claims {
 	return &tokenauth.Claims{
-		StandardClaims: jwt.StandardClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
 			Audience:  aud,
 			Subject:   sub,
-			ExpiresAt: exp,
-			IssuedAt:  time.Now().Unix(),
+			ExpiresAt: &jwt.NumericDate{Time: exp},
+			IssuedAt:  &jwt.NumericDate{Time: time.Now()},
 			Issuer:    issuer,
 		}, OrgID: orgID, Purpose: purpose, Permissions: permissions, Scope: scope, AuthType: auth_type,
 	}
@@ -57,14 +57,14 @@ func getTestClaims(sub string, aud string, orgID string, purpose string, issuer 
 
 func getSampleValidClaims() *tokenauth.Claims {
 	exp := time.Now().Add(30 * time.Minute)
-	return getTestClaims("test_user_id", "rokwire", "test_org_id", "access",
-		"https://auth.rokwire.com", "example_permission,test_permission,sample_admin", "all:all:all", "email", exp.Unix())
+	return getTestClaims("test_user_id", []string{"rokwire"}, "test_org_id", "access",
+		"https://auth.rokwire.com", "example_permission,test_permission,sample_admin", "all:all:all", "email", exp)
 }
 
 func getSampleExpiredClaims() *tokenauth.Claims {
 	exp := time.Now().Add(-5 * time.Minute)
-	return getTestClaims("test_user_id", "rokwire", "test_org_id", "access",
-		"https://auth.rokwire.com", "example_permission", "all:all:all", "email", exp.Unix())
+	return getTestClaims("test_user_id", []string{"rokwire"}, "test_org_id", "access",
+		"https://auth.rokwire.com", "example_permission", "all:all:all", "email", exp)
 }
 
 func TestClaims_CanAccess(t *testing.T) {
@@ -146,7 +146,7 @@ func TestTokenAuth_CheckToken(t *testing.T) {
 
 	// Valid audience
 	validAudClaims := getSampleValidClaims()
-	validAudClaims.Audience = "test"
+	validAudClaims.Audience = []string{"test"}
 	validAudToken, err := tokenauth.GenerateSignedToken(validAudClaims, samplePrivKey)
 	if err != nil {
 		t.Errorf("Error initializing valid aud token: %v", err)
@@ -169,7 +169,7 @@ func TestTokenAuth_CheckToken(t *testing.T) {
 
 	// Invalid audience
 	invalidAudClaims := getSampleValidClaims()
-	invalidAudClaims.Audience = "test2"
+	invalidAudClaims.Audience = []string{"test2"}
 	invalidAudToken, err := tokenauth.GenerateSignedToken(invalidAudClaims, samplePrivKey)
 	if err != nil {
 		t.Errorf("Error initializing invalid aud token: %v", err)

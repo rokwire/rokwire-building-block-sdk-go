@@ -28,7 +28,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 )
 
@@ -117,7 +117,7 @@ func (p *PrivKey) Sign(message []byte) (string, error) {
 		return "", fmt.Errorf("error signing message: %v", err)
 	}
 
-	return signature, nil
+	return string(signature), nil
 }
 
 // Equal determines whether the privkey is equivalent to other
@@ -295,7 +295,7 @@ func (p *PubKey) Verify(message []byte, signature string) error {
 	if sigMethod == nil {
 		return errors.New(errUnsupportedAlg)
 	}
-	err := sigMethod.Verify(string(message), signature, p.Key)
+	err := sigMethod.Verify(string(message), []byte(signature), p.Key)
 	if err != nil {
 		return fmt.Errorf("error verifying signature: %v", err)
 	}

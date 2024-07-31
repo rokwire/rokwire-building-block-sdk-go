@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/keys"
@@ -36,8 +36,8 @@ const (
 
 // Claims represents the standard claims included in access tokens
 type Claims struct {
-	// Required Standard Claims: sub, aud, exp, iat
-	jwt.StandardClaims
+	// Required JWT Claims: sub, aud, exp, iat
+	jwt.RegisteredClaims
 	OrgID         string `json:"org_id" validate:"required"`    // Organization ID
 	AppID         string `json:"app_id"`                        // Application ID
 	SessionID     string `json:"session_id"`                    // Session ID
@@ -146,10 +146,10 @@ func (t *TokenAuth) CheckToken(token string, purpose string) (*Claims, error) {
 	if claims.Subject == "" {
 		return claims, errors.New("token sub missing")
 	}
-	if claims.ExpiresAt == 0 {
+	if claims.ExpiresAt == nil {
 		return claims, errors.New("token exp missing")
 	}
-	if claims.IssuedAt == 0 {
+	if claims.IssuedAt == nil {
 		return claims, errors.New("token iat missing")
 	}
 	if claims.OrgID == "" {
@@ -165,8 +165,7 @@ func (t *TokenAuth) CheckToken(token string, purpose string) (*Claims, error) {
 		return claims, fmt.Errorf("token purpose (%s) does not match %s", claims.Purpose, purpose)
 	}
 
-	aud := strings.Split(claims.Audience, ",")
-	if !(rokwireutils.ContainsString(aud, t.serviceRegManager.AuthService.ServiceID) || (t.acceptRokwireTokens && rokwireutils.ContainsString(aud, AudRokwire))) {
+	if !(rokwireutils.ContainsString(claims.Audience, t.serviceRegManager.AuthService.ServiceID) || (t.acceptRokwireTokens && rokwireutils.ContainsString(claims.Audience, AudRokwire))) {
 		acceptAuds := t.serviceRegManager.AuthService.ServiceID
 		if t.acceptRokwireTokens {
 			acceptAuds += " or " + AudRokwire
@@ -198,14 +197,14 @@ func (t *TokenAuth) CheckToken(token string, purpose string) (*Claims, error) {
 	kid, _ := parsedToken.Header["kid"].(string)
 	if kid != authServiceReg.PubKey.KeyID {
 		if !parsedToken.Valid {
-			if claims.ExpiresAt > time.Now().Unix() {
+			if claims.ExpiresAt.After(time.Now()) {
 				claims, err = t.retryCheckToken(token, purpose)
 				if err != nil {
 					return claims, fmt.Errorf("token kid (%s) does not match %s: %v", kid, authServiceReg.PubKey.KeyID, err)
 				}
 				return claims, nil
 			}
-			return claims, fmt.Errorf("token is expired %d", claims.ExpiresAt)
+			return claims, fmt.Errorf("token is expired %v", claims.ExpiresAt)
 		}
 		return claims, fmt.Errorf("token has valid signature but invalid kid %s", kid)
 	}

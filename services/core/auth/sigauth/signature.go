@@ -28,10 +28,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/keys"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
