@@ -48,8 +48,8 @@ func getTestClaims(sub string, aud []string, orgID string, purpose string, issue
 		RegisteredClaims: jwt.RegisteredClaims{
 			Audience:  aud,
 			Subject:   sub,
-			ExpiresAt: &jwt.NumericDate{Time: exp},
-			IssuedAt:  &jwt.NumericDate{Time: time.Now()},
+			ExpiresAt: &jwt.NumericDate{Time: exp.Truncate(time.Second)},
+			IssuedAt:  &jwt.NumericDate{Time: time.Now().Truncate(time.Second)},
 			Issuer:    issuer,
 		}, OrgID: orgID, Purpose: purpose, Permissions: permissions, Scope: scope, AuthType: auth_type,
 	}

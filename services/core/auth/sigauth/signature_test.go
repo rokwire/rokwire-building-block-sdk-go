@@ -76,16 +76,16 @@ func TestSignatureAuth_CheckServiceSignature(t *testing.T) {
 
 	type args struct {
 		serviceID string
-		message   []byte
+		message   string
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{name: "success", args: args{serviceID: "test", message: []byte("test_message")}, wantErr: false},
-		{name: "bad_service_id", args: args{serviceID: "auth", message: []byte("test_message")}, wantErr: true},
-		{name: "empty_message", args: args{serviceID: "test", message: make([]byte, 0)}, wantErr: false},
+		{name: "success", args: args{serviceID: "test", message: "test_message"}, wantErr: false},
+		{name: "bad_service_id", args: args{serviceID: "auth", message: "test_message"}, wantErr: true},
+		{name: "empty_message", args: args{serviceID: "test", message: ""}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -123,16 +123,16 @@ func TestSignatureAuth_CheckSignature(t *testing.T) {
 	type args struct {
 		privKey *keys.PrivKey
 		pubKey  *keys.PubKey
-		message []byte
+		message string
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{name: "success", args: args{privKey: privKey, pubKey: pubKey, message: []byte("test_message")}, wantErr: false},
-		{name: "nil_pub_key", args: args{privKey: privKey, pubKey: nil, message: []byte("test_message")}, wantErr: true},
-		{name: "empty_message", args: args{privKey: privKey, pubKey: pubKey, message: make([]byte, 0)}, wantErr: false},
+		{name: "success", args: args{privKey: privKey, pubKey: pubKey, message: "test_message"}, wantErr: false},
+		{name: "nil_pub_key", args: args{privKey: privKey, pubKey: nil, message: "test_message"}, wantErr: true},
+		{name: "empty_message", args: args{privKey: privKey, pubKey: pubKey, message: ""}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

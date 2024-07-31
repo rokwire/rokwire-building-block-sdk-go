@@ -52,12 +52,12 @@ type SignatureAuth struct {
 }
 
 // Sign generates and returns a signature for the provided message
-func (s *SignatureAuth) Sign(message []byte) (string, error) {
+func (s *SignatureAuth) Sign(message string) (string, error) {
 	return s.serviceKey.Sign(message)
 }
 
 // CheckServiceSignature validates the provided message signature from the given service
-func (s *SignatureAuth) CheckServiceSignature(serviceID string, message []byte, signature string) error {
+func (s *SignatureAuth) CheckServiceSignature(serviceID string, message string, signature string) error {
 	serviceReg, err := s.serviceRegManager.GetServiceRegWithPubKey(serviceID)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve service pub key: %v", err)
@@ -67,7 +67,7 @@ func (s *SignatureAuth) CheckServiceSignature(serviceID string, message []byte, 
 }
 
 // CheckSignature validates the provided message signature from the given public key
-func (s *SignatureAuth) CheckSignature(pubKey *keys.PubKey, message []byte, signature string) error {
+func (s *SignatureAuth) CheckSignature(pubKey *keys.PubKey, message string, signature string) error {
 	err := pubKey.Verify(message, signature)
 	if err != nil && s.supportLegacy {
 		return s.LegacyCheckSignature(pubKey, message, signature)
@@ -76,17 +76,17 @@ func (s *SignatureAuth) CheckSignature(pubKey *keys.PubKey, message []byte, sign
 }
 
 // LegacyCheckSignature validates the provided message signature from the given public key
-func (s *SignatureAuth) LegacyCheckSignature(pubKey *keys.PubKey, message []byte, signature string) error {
+func (s *SignatureAuth) LegacyCheckSignature(pubKey *keys.PubKey, message string, signature string) error {
 	if pubKey == nil {
 		return errors.New("public key is nil")
 	}
 
-	sigBytes, err := base64.StdEncoding.DecodeString(signature)
+	sigBytes, err := base64.StdEncoding.DecodeString(string(signature))
 	if err != nil {
 		return fmt.Errorf("error decoding signature: %v", err)
 	}
 
-	hash, err := rokwireutils.HashSha256(message)
+	hash, err := rokwireutils.HashSha256([]byte(message))
 	if err != nil {
 		return fmt.Errorf("error hashing message: %v", err)
 	}
@@ -142,12 +142,12 @@ func (s *SignatureAuth) SignRequest(r *http.Request) error {
 		return fmt.Errorf("error building signature string: %v", err)
 	}
 
-	sig, err := s.Sign([]byte(sigString))
+	sig, err := s.Sign(sigString)
 	if err != nil {
 		return fmt.Errorf("error signing signature string: %v", err)
 	}
 
-	sigAuthHeader.Signature = sig
+	sigAuthHeader.Signature = string(sig)
 
 	authHeader, err := sigAuthHeader.Build()
 	if err != nil {
@@ -195,7 +195,7 @@ func (s *SignatureAuth) CheckRequestServiceSignature(r *Request, requiredService
 		return "", fmt.Errorf("request signer fingerprint (%s) does not match any of the required services %v", sigAuthHeader.KeyID, requiredServiceIDs)
 	}
 
-	err = s.CheckSignature(serviceReg.PubKey, []byte(sigString), sigAuthHeader.Signature)
+	err = s.CheckSignature(serviceReg.PubKey, sigString, sigAuthHeader.Signature)
 	if err != nil {
 		return "", fmt.Errorf("error validating signature: %v", err)
 	}
@@ -235,7 +235,7 @@ func (s *SignatureAuth) CheckParsedRequestSignature(sigString string, sigAuthHea
 		return fmt.Errorf("signing algorithm (%s) does not match %s", sigAuthHeader.Algorithm, s.servicePubKey.Alg)
 	}
 
-	err := s.CheckSignature(key, []byte(sigString), sigAuthHeader.Signature)
+	err := s.CheckSignature(key, sigString, sigAuthHeader.Signature)
 	if err != nil {
 		return fmt.Errorf("error validating signature: %v", err)
 	}
