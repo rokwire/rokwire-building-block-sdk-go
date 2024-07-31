@@ -15,13 +15,14 @@
 package envloader
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 )
@@ -122,20 +123,19 @@ func NewAWSSecretsManagerEnvLoader(secretName string, region string, version str
 		logger.Fatal("Region cannot be empty")
 	}
 
-	s, err := session.NewSession(&aws.Config{
-		Region: &region,
-	})
+	context := context.Background()
+	s, err := config.LoadDefaultConfig(context, config.WithRegion(region))
 	if err != nil {
 		logger.Fatalf("Error creating AWS session - SecretName: %s, Region: %s, Error: %v", secretName, region, err)
 	}
 
-	svc := secretsmanager.New(s)
+	svc := secretsmanager.NewFromConfig(s)
 	input := &secretsmanager.GetSecretValueInput{
 		SecretId:     aws.String(secretName),
 		VersionStage: aws.String("AWSCURRENT"),
 	}
 
-	result, err := svc.GetSecretValue(input)
+	result, err := svc.GetSecretValue(context, input)
 	if err != nil {
 		logger.Fatalf("Error loading secrets manager secret - Name: %s, Region: %s, Error: %v", secretName, region, err)
 	}

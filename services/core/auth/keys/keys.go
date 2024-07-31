@@ -28,7 +28,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 )
 
@@ -103,7 +103,7 @@ func (p *PrivKey) Decrypt(data []byte, label []byte) (string, error) {
 }
 
 // Sign uses "key" to sign message
-func (p *PrivKey) Sign(message []byte) (string, error) {
+func (p *PrivKey) Sign(message string) (string, error) {
 	if p == nil {
 		return "", fmt.Errorf("privkey is nil")
 	}
@@ -112,12 +112,13 @@ func (p *PrivKey) Sign(message []byte) (string, error) {
 	if sigMethod == nil {
 		return "", errors.New(errUnsupportedAlg)
 	}
-	signature, err := sigMethod.Sign(string(message), p.Key)
+
+	signature, err := sigMethod.Sign(message, p.Key)
 	if err != nil {
 		return "", fmt.Errorf("error signing message: %v", err)
 	}
 
-	return signature, nil
+	return jwt.New(sigMethod).EncodeSegment(signature), nil
 }
 
 // Equal determines whether the privkey is equivalent to other
@@ -286,7 +287,7 @@ func (p *PubKey) Encrypt(data []byte, label []byte) ([]byte, error) {
 }
 
 // Verify verifies that signature matches message by using "Key"
-func (p *PubKey) Verify(message []byte, signature string) error {
+func (p *PubKey) Verify(message string, signature string) error {
 	if p == nil {
 		return fmt.Errorf("pubkey is nil")
 	}
@@ -295,7 +296,12 @@ func (p *PubKey) Verify(message []byte, signature string) error {
 	if sigMethod == nil {
 		return errors.New(errUnsupportedAlg)
 	}
-	err := sigMethod.Verify(string(message), signature, p.Key)
+
+	sig, err := jwt.NewParser().DecodeSegment(signature)
+	if err != nil {
+		return fmt.Errorf("error decoding signature: %v", err)
+	}
+	err = sigMethod.Verify(message, sig, p.Key)
 	if err != nil {
 		return fmt.Errorf("error verifying signature: %v", err)
 	}

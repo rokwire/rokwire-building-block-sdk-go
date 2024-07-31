@@ -26,10 +26,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/keys"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 	"golang.org/x/sync/syncmap"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 // -------------------- Service --------------------
