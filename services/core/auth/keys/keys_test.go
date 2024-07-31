@@ -18,8 +18,8 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"github.com/rokwire/rokwire-sdk-go/internal/testutils"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/keys"
+	"github.com/rokwire/rokwire-building-block-sdk-go/internal/testutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/keys"
 )
 
 func setupPubKeyFromPem(pem string) *keys.PubKey {

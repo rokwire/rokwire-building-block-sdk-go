@@ -1,0 +1,32 @@
+openapi: 3.0.3
+info:
+  title: Rokwire Building Block SDK
+  description: Rokwire Building Block SDK API Documentation
+  version: 1.0.0
+tags:
+  - name: Admin
+    description: Clients administration applications APIs.
+  - name: Default
+    description: Default APIs.
+paths:  
+  # Default
+  /version:
+    $ref: "./resources/default/version.yaml"
+
+  # Admin
+  /api/admin/configs:
+    $ref: "./resources/admin/configs.yaml"
+  /api/admin/configs/{id}:
+    $ref: "./resources/admin/configs-id.yaml"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Config:
+      $ref: "./schemas/application/Config.yaml"
+    _admin_req_update_configs:
+      $ref: './schemas/apis/admin/update-configs/Request.yaml'

@@ -22,10 +22,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/rokwire/rokwire-sdk-go/internal/testutils"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/keys"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/sigauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/internal/testutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/keys"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/sigauth"
 )
 
 // WebAdapter is the web adapter for signature auth
@@ -58,7 +58,7 @@ func (we WebAdapter) example2TestHandler(w http.ResponseWriter, req *http.Reques
 	w.Write([]byte("Access granted: example2"))
 }
 
-func (we WebAdapter) sampleSignedRequest(url string, param string, body []byte) (string, error) {
+func (we WebAdapter) sampleSignedRequest(url string, body []byte) (string, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
@@ -126,7 +126,7 @@ func main() {
 	// 	that this service will receive signed requests from.
 	services := []string{"auth"}
 
-	// Instantiate an AuthService to maintain basic auth data
+	// Instantiate an auth.Service to maintain basic auth data
 	authService := auth.Service{
 		ServiceID:   "example",
 		ServiceHost: "http://localhost:5000",
@@ -192,7 +192,7 @@ func main() {
 	reqData, _ := json.Marshal(req)
 
 	fmt.Println("adapter done")
-	response, err := adapter.sampleSignedRequest("http://localhost/core/bbs/access-token", "sample", reqData)
+	response, err := adapter.sampleSignedRequest("http://localhost/core/bbs/access-token", reqData)
 	if err != nil {
 		log.Printf("Error making sample signed request: %v", err)
 	} else {

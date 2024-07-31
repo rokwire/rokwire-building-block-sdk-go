@@ -102,11 +102,18 @@ vendor:
 
 .PHONY: oapi-gen-types
 oapi-gen-types: ;
-	oapi-codegen --config oapi-codegen-config.yaml driver/web/docs/gen/def.yaml
+	oapi-codegen --config oapi-codegen-config.yaml web/docs/gen/def.yaml
 
 .PHONY: oapi-gen-docs
 oapi-gen-docs: ;
-	swagger-cli bundle driver/web/docs/index.yaml --outfile driver/web/docs/gen/def.yaml --type yaml
+	swagger-cli bundle web/docs/index.yaml --outfile web/docs/gen/def.yaml --type yaml
+
+.PHONY: gen-apis
+gen-apis: ; $(info $(M) generating api handlers...) @ ## Generate API handlers and fix formatting on generated files
+	python3 api-generator/generator/main.py
+	$(GOFMT) -l -w $(BASE)/web/adapter_helper.go
+	$(GOFMT) -l -w $(BASE)/web/apis.go
+	$(GOFMT) -l -w $(BASE)/services/common/apis.go
 
 .PHONY: log-variables
 log-variables: ; $(info $(M) logging variables...) @ ## Log the variables values

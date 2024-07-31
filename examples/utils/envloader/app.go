@@ -15,8 +15,8 @@
 package main
 
 import (
-	"github.com/rokwire/rokwire-sdk-go/utils/envloader"
-	"github.com/rokwire/rokwire-sdk-go/utils/logging/logs"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/envloader"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 )
 
 var (

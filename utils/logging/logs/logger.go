@@ -15,7 +15,7 @@
 package logs
 
 import (
-	"github.com/rokwire/rokwire-sdk-go/utils/logging/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 	"github.com/sirupsen/logrus"
 )
 

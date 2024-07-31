@@ -21,9 +21,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth"
-	"github.com/rokwire/rokwire-sdk-go/utils/logging/logs"
-	"github.com/rokwire/rokwire-sdk-go/utils/rokwireutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 )
 
 // Service contains configurations and helper functions required to utilize certain core services
