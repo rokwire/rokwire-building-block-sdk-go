@@ -17,13 +17,13 @@ package main
 import (
 	"log"
 
-	"github.com/rokwire/rokwire-sdk-go/services/core"
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth"
-	"github.com/rokwire/rokwire-sdk-go/utils/logging/logs"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 )
 
 func main() {
-	// Instantiate an AuthService to maintain basic auth data
+	// Instantiate an auth.Service to maintain basic auth data
 	authService := auth.Service{
 		ServiceID:   "example",
 		ServiceHost: "http://localhost:5000",

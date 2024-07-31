@@ -21,7 +21,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/rokwire/rokwire-sdk-go/utils/rokwireutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 	"github.com/rs/cors"
 )
 

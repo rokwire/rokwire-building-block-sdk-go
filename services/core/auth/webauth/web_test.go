@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rokwire/rokwire-sdk-go/services/core/auth/webauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/webauth"
 )
 
 func TestCheckOrigin(t *testing.T) {

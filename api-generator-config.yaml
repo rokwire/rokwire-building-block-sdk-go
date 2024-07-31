@@ -1,0 +1,33 @@
+module_name: github.com/rokwire/rokwire-building-block-sdk-go
+docs_filepath: web/docs/gen/def.yaml
+
+imports:
+  utils: >-
+    "{module_name}/utils/rokwireutils"
+  mux: >-
+    "github.com/gorilla/mux"
+  common: >-
+    "github.com/rokwire/rokwire-building-block-sdk-go/services/common"
+  tokenauth: >-
+    "github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/tokenauth"
+  errors: >-
+    "github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
+  logutils: >-
+    "github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
+tags:
+  Default: default
+  Admin: administrative
+auth_handlers_types:
+  - User
+  - Standard
+  - Authenticated
+  - Permissions
+
+x_core_function: x-core-function
+x_data_type: x-data-type
+x_auth_type: x-authentication-type
+x_conversion_function: x-conversion-function
+
+api_function_dest_path: web/adapter_helper.go
+api_routes_dest_path: web/apis.go
+api_interfaces_dest_path: services/common/apis.go

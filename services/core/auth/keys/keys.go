@@ -29,7 +29,7 @@ import (
 	"io"
 
 	"github.com/golang-jwt/jwt"
-	"github.com/rokwire/rokwire-sdk-go/utils/rokwireutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 )
 
 const (
