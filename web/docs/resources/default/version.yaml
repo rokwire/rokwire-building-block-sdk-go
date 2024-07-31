@@ -1,0 +1,18 @@
+get:
+  tags:
+  - Default
+  summary: Get version
+  description: |
+    Gets current version of this service
+  responses:
+    200:
+      description: Success
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: v1.0.0
+    500:
+      description: Internal error
+  x-core-function: GetVersion
+  x-data-type: string
