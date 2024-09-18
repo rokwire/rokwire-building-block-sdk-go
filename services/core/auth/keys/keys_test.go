@@ -179,19 +179,19 @@ func TestPrivKey_Sign(t *testing.T) {
 
 	type args struct {
 		key     *keys.PrivKey
-		message []byte
+		message string
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{"success rsa key", args{rsaKey, []byte("This is a test.")}, false},
-		{"success empty message", args{rsaKey, nil}, false},
-		{"success ec key", args{ecKey, []byte("This is a test.")}, false},
-		{"success eddsa key", args{edKey, []byte("This is a test.")}, false},
-		{"return error on unsupported alg", args{badKey, []byte("This is a test.")}, true},
-		{"return error on nil key", args{nil, []byte("This is a test.")}, true},
+		{"success rsa key", args{rsaKey, "This is a test."}, false},
+		{"success empty message", args{rsaKey, ""}, false},
+		{"success ec key", args{ecKey, "This is a test."}, false},
+		{"success eddsa key", args{edKey, "This is a test."}, false},
+		{"return error on unsupported alg", args{badKey, "This is a test."}, true},
+		{"return error on nil key", args{nil, "This is a test."}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -203,6 +203,7 @@ func TestPrivKey_Sign(t *testing.T) {
 			if !tt.wantErr && len(got) == 0 {
 				t.Errorf("PrivKey.Sign() empty")
 			}
+			t.Logf("signature: %s", got)
 		})
 	}
 }
@@ -464,7 +465,7 @@ func TestPubKey_Verify(t *testing.T) {
 
 	type args struct {
 		key       *keys.PubKey
-		message   []byte
+		message   string
 		signature string
 	}
 	tests := []struct {
@@ -472,10 +473,10 @@ func TestPubKey_Verify(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"success rsa", args{rsaKey, []byte("This is a test."), "aDyy8hzndck19hBzUoFQWDRy1IF1pvDXzra1daTpq_zfCmMXhp1XGh-13UGertuBpBr21bbGh8p9miQnLrJbutqT2-zf1pcBHPIkqHK8s-I29RQQNVa2vXvnjHO3omW9ntmhnqa5puJolCqmMmimQV0zJ0Ljy79goGaKaLPSEd3hxSH3Ayhauhizh2f5s13PmXxHJYAXduperGOMAXZ_xFIGx732wOE05xXASKbcT63hqq6TWnVGXngC0i4JaFX4Kq4JeUXCB5bjh0dGfTf6ODcHENkIiNQCtNhoiibMakasW0jZHm1h0ceYuyJO-WsgSi2s9M9b4mHnAD1IX--jlQ"}, false},
-		{"success ec", args{ecKey, []byte("This is a test."), "m7nGICA4C5_i14SvpSrMPQTfBwkdOdfpLRumEKkwi0byh-Hs-vp1VyzYJqOecQgnVFqZmoOZmg4Qi59qqadTNQ"}, false},
-		{"success eddsa", args{edKey, []byte("This is a test."), "eVXXxIKSBYSm-OgblFslA4VGAML3hOfZpH1oYPg9K4bSiDCU2GxSNwq9SEkPwZMFE-dAHla3O7sVGqioXzx3Ag"}, false},
-		{"errors on nil key", args{nil, []byte("This is a test."), ""}, true},
+		{"success rsa", args{rsaKey, "This is a test.", "aDyy8hzndck19hBzUoFQWDRy1IF1pvDXzra1daTpq_zfCmMXhp1XGh-13UGertuBpBr21bbGh8p9miQnLrJbutqT2-zf1pcBHPIkqHK8s-I29RQQNVa2vXvnjHO3omW9ntmhnqa5puJolCqmMmimQV0zJ0Ljy79goGaKaLPSEd3hxSH3Ayhauhizh2f5s13PmXxHJYAXduperGOMAXZ_xFIGx732wOE05xXASKbcT63hqq6TWnVGXngC0i4JaFX4Kq4JeUXCB5bjh0dGfTf6ODcHENkIiNQCtNhoiibMakasW0jZHm1h0ceYuyJO-WsgSi2s9M9b4mHnAD1IX--jlQ"}, false},
+		{"success ec", args{ecKey, "This is a test.", "m7nGICA4C5_i14SvpSrMPQTfBwkdOdfpLRumEKkwi0byh-Hs-vp1VyzYJqOecQgnVFqZmoOZmg4Qi59qqadTNQ"}, false},
+		{"success eddsa", args{edKey, "This is a test.", "eVXXxIKSBYSm-OgblFslA4VGAML3hOfZpH1oYPg9K4bSiDCU2GxSNwq9SEkPwZMFE-dAHla3O7sVGqioXzx3Ag"}, false},
+		{"errors on nil key", args{nil, "This is a test.", ""}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

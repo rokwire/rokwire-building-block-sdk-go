@@ -183,7 +183,7 @@ func NewWebAdapter[T common.Storage](port string, serviceID string, app *common.
 		logger.Fatalf("error loading docs yaml - %s", err.Error())
 	}
 
-	yamlBaseDoc, err := os.ReadFile(basepath + "/docs/gen/def.yaml")
+	yamlBaseDoc, err := os.ReadFile(basepath + "/def.yaml")
 	if err != nil {
 		logger.Fatalf("error reading base docs file - %s", err.Error())
 	}

@@ -102,11 +102,11 @@ vendor:
 
 .PHONY: oapi-gen-types
 oapi-gen-types: ;
-	oapi-codegen --config oapi-codegen-config.yaml web/docs/gen/def.yaml
+	oapi-codegen --config oapi-codegen-config.yaml web/def.yaml
 
 .PHONY: oapi-gen-docs
 oapi-gen-docs: ;
-	swagger-cli bundle web/docs/index.yaml --outfile web/docs/gen/def.yaml --type yaml
+	swagger-cli bundle web/docs/index.yaml --outfile web/def.yaml --type yaml
 
 .PHONY: gen-apis
 gen-apis: ; $(info $(M) generating api handlers...) @ ## Generate API handlers and fix formatting on generated files
