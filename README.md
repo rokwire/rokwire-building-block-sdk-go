@@ -12,11 +12,33 @@ go get -u github.com/rokwire/rokwire-building-block-sdk-go
 
 ## Upgrading
 
+### Staying up to date
+
+To update rokwire-building-block-sdk-go to the latest version, use `go get -u github.com/rokwire/rokwire-building-block-sdk-go`.
+
 ### Migration steps
 
 Follow the steps below to upgrade to the associated version of this library. Note that the steps for each version are cumulative, so if you are attempting to upgrade by several versions, be sure to make the changes described for each version between your current version and the latest.
 
 #### Unreleased
+
+##### Breaking changes
+
+###### keys
+
+* `PrivKey.Sign` now takes `message string` as an argument instead of `message []byte`.
+* `PubKey.Verify` now takes `message string` as an argument instead of `message []byte`.
+
+###### sigauth
+
+* `SignatureAuth.Sign` now takes `message string` as an argument instead of `message []byte`.
+* `SignatureAuth.CheckServiceSignature` now takes `message string` as an argument instead of `message []byte`.
+* `SignatureAuth.CheckSignature` now takes `message string` as an argument instead of `message []byte`.
+* `SignatureAuth.LegacyCheckSignature` now takes `message string` as an argument instead of `message []byte`.
+
+###### tokenauth
+
+* `Claims` now uses `jwt.RegisteredClaims` (github.com/golang-jwt/jwt/v5) as an embedded struct instead of `jwt.StandardClaims` (github.com/golang-jwt/jwt v3).
 
 ## Packages
 
