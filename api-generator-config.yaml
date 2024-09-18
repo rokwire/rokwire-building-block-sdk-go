@@ -1,5 +1,5 @@
 module_name: github.com/rokwire/rokwire-building-block-sdk-go
-docs_filepath: web/docs/gen/def.yaml
+docs_filepath: web/def.yaml
 
 imports:
   utils: >-
