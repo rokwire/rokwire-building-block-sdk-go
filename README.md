@@ -2,6 +2,11 @@
 
 rokwire-building-block-sdk-go is the official Rokwire Building Block SDK for Golang. This SDK enables easy communication with the Rokwire Building Blocks and provides commonly used utilities.
 
+## Prerequisites
+
+* Go v1.23+
+* MongoDB v4.4+
+
 ## Installation
 
 To install this package or upgrade to the latest version, use `go get`:
