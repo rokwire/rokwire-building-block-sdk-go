@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
-- Expose router for manual API definitions [#9](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/9)
+- BREAKING: Expose router for manual API definitions [#9](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/9)
 
 ## [1.0.1] - 2024-09-18
 ### Changed
