@@ -85,16 +85,22 @@ type Adapter[T common.Storage] struct {
 	docsYAMLPath  string
 	cachedJSONDoc []byte
 	Paths         map[string]*openapi3.PathItem
-	BaseRouter    *mux.Router
 
 	apisHandler APIsHandler[T]
 
 	Logger *logs.Logger
 
 	// handler registration functions
-	RegisterHandlerFunc  func(*mux.Router, string, string, string, string, string, interface{}, interface{}, interface{}) error
-	AuthHandlerGetter    func(string, interface{}) (tokenauth.Handler, error)
-	CoreHandlerGetter    func(string, string) (interface{}, error)
+
+	// registers auto-generated API handlers
+	RegisterGeneratedHandlerFunc func(*mux.Router, string, string, string, string, string, interface{}, interface{}, interface{}) error
+	// registers any manually defined API handlers
+	RegisterManualHandlerFunc func(*mux.Router) error
+	// registers additional auth handlers used by the service and not defined in the SDK
+	AuthHandlerGetter func(string, interface{}) (tokenauth.Handler, error)
+	// registers additional core handlers used by the service and not defined in the SDK
+	CoreHandlerGetter func(string, string) (interface{}, error)
+	// registers additional conversion functions used by the service and not defined in the SDK
 	ConversionFuncGetter func(interface{}) (interface{}, error)
 }
 
@@ -107,11 +113,17 @@ func (a *Adapter[T]) Start() {
 	baseRouter := router.PathPrefix("/" + a.serviceID).Subrouter()
 	baseRouter.PathPrefix("/doc/ui").Handler(a.serveDocUI())
 	baseRouter.HandleFunc("/doc", a.serveDoc)
-	a.BaseRouter = baseRouter
 
 	err := a.routeAPIs(router)
 	if err != nil {
 		a.Logger.Fatal(err.Error())
+	}
+
+	if a.RegisterManualHandlerFunc != nil {
+		err = a.RegisterManualHandlerFunc(baseRouter)
+		if err != nil {
+			a.Logger.Fatal(err.Error())
+		}
 	}
 
 	a.Logger.Fatalf("Error serving: %v", http.ListenAndServe(":"+a.port, router))
