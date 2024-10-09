@@ -85,6 +85,7 @@ type Adapter[T common.Storage] struct {
 	docsYAMLPath  string
 	cachedJSONDoc []byte
 	Paths         map[string]*openapi3.PathItem
+	BaseRouter    *mux.Router
 
 	apisHandler APIsHandler[T]
 
@@ -106,6 +107,7 @@ func (a *Adapter[T]) Start() {
 	baseRouter := router.PathPrefix("/" + a.serviceID).Subrouter()
 	baseRouter.PathPrefix("/doc/ui").Handler(a.serveDocUI())
 	baseRouter.HandleFunc("/doc", a.serveDoc)
+	a.BaseRouter = baseRouter
 
 	err := a.routeAPIs(router)
 	if err != nil {
