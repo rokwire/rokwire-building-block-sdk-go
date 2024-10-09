@@ -64,7 +64,7 @@ func (a *Adapter[T]) registerHandler(router *mux.Router, pathStr string, method 
 			router.HandleFunc(pathStr, handler.HandleRequest(a.Paths, a.Logger)).Methods(method)
 		}
 	default:
-		return a.RegisterHandlerFunc(router, pathStr, method, tag, coreFunc, dataType, authType, requestBody, conversionFunc)
+		return a.RegisterGeneratedHandlerFunc(router, pathStr, method, tag, coreFunc, dataType, authType, requestBody, conversionFunc)
 	}
 
 	return nil
