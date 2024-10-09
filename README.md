@@ -33,7 +33,7 @@ Follow the steps below to upgrade to the associated version of this library. Not
 
 * `Adapter[T common.Storage].RegisterHandlerFunc` has been renamed to `Adapter[T common.Storage].RegisterGeneratedHandlerFunc`.
 
-#### [1.0.1](https://github.com/rokwire/core-auth-library-go/compare/v1.0.0...v1.0.1)
+#### [1.0.1](https://github.com/rokwire/rokwire-building-block-sdk-go/compare/v1.0.0...v1.0.1)
 
 ##### Breaking changes
 
