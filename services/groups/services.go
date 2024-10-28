@@ -15,7 +15,12 @@
 package groups
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
 
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
@@ -25,9 +30,58 @@ import (
 type GroupsAdapter struct {
 	serviceAccountManager *auth.ServiceAccountManager
 
-	GroupsAdapter string
+	groupsBaseURL string
 
 	logger *logs.Logger
+}
+
+// GetGroupMembership wrapps the group title and group membership status of user
+type GetGroupMembership struct {
+	GroupID string `json:"group_id"`
+	Title   string `json:"group_title"`
+	Status  string `json:"status"`
+}
+
+// GetGroupMemberships Get aggregated title of the group and status of the member
+func (na *GroupsAdapter) GetGroupMemberships(logs *logs.Log, userID string) ([]GetGroupMembership, error) {
+	url := fmt.Sprintf("%s/api/bbs/groups/%s/memberships", na.groupsBaseURL, userID)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		logs.Errorf("GetGroupMembership:error creating load user data request - %s", err)
+		return nil, err
+	}
+
+	resp, err := na.serviceAccountManager.MakeRequest(req, "all", "all")
+	if err != nil {
+		logs.Errorf("GetGroupMembership: error sending request - %s", err)
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		errorResponse, _ := ioutil.ReadAll(resp.Body)
+		if errorResponse != nil {
+			logs.Errorf("GetGroupMembership: error with response code - %s", errorResponse)
+		}
+		logs.Errorf("GetGroupMembership: error with response code - %d", resp.StatusCode)
+		return nil, fmt.Errorf("GetGroupEventUsers:error with response code != 200")
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("GetGroupMembership: unable to read json: %s", err)
+		return nil, fmt.Errorf("GetGroupMembership: unable to parse json: %s", err)
+	}
+
+	var getGroupMemberships []GetGroupMembership
+	err = json.Unmarshal(data, &getGroupMemberships)
+	if err != nil {
+		log.Printf("GetGroupMembership: unable to parse json: %s", err)
+		return nil, fmt.Errorf("GetGroupMembership: unable to parse json: %s", err)
+	}
+
+	return getGroupMemberships, nil
 }
 
 // NewGroupsService creates and configures a new Service instance
@@ -36,7 +90,11 @@ func NewGroupsService(serviceAccountManager *auth.ServiceAccountManager, groupsB
 		return nil, errors.New("service account manager is missing")
 	}
 
-	groups := GroupsAdapter{serviceAccountManager: serviceAccountManager, GroupsAdapter: groupsBaseURL, logger: logger}
+	if groupsBaseURL == "" {
+		return nil, errors.New("groups base url is missing")
+	}
+
+	groups := GroupsAdapter{serviceAccountManager: serviceAccountManager, groupsBaseURL: groupsBaseURL, logger: logger}
 
 	return &groups, nil
 }
