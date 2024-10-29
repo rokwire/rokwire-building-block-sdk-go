@@ -27,15 +27,16 @@ func main() {
 	// Instantiate an auth.Service to maintain basic auth data
 	authService := auth.Service{
 		ServiceID:     "example",
-		ServiceHost:   "http://localhost:5000",
+		ServiceHost:   "http://localhost",
 		FirstParty:    true,
 		AuthBaseURL:   "http://localhost:5050/core",
-		GroupsBaseURL: "http://localhost/gr",
+		GroupsBaseURL: "http://localhost:81/gr",
 	}
 
 	// Instantiate a remote ServiceAccountLoader to load auth service account data from auth service
 	staticTokenAuth := auth.StaticTokenServiceAuth{ServiceToken: "exampleToken"}
-	serviceAccountLoader, err := auth.NewRemoteServiceAccountLoader(&authService, "exampleAccountID", staticTokenAuth)
+	accountID := "9f627704-a39f-442a-ab60-44e6fd3c5e9d"
+	serviceAccountLoader, err := auth.NewRemoteServiceAccountLoader(&authService, accountID, staticTokenAuth)
 	if err != nil {
 		log.Fatalf("Error initializing remote service account loader: %v", err)
 	}

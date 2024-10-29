@@ -43,7 +43,7 @@ type GetGroupMembership struct {
 }
 
 // GetGroupMemberships Get aggregated title of the group and status of the member
-func (na *GroupsAdapter) GetGroupMemberships(logs *logs.Log, userID string) ([]GetGroupMembership, error) {
+func (na *GroupsAdapter) GetGroupMemberships(logs logs.Logger, userID string) ([]GetGroupMembership, error) {
 	url := fmt.Sprintf("%s/api/bbs/groups/%s/memberships", na.groupsBaseURL, userID)
 
 	req, err := http.NewRequest("GET", url, nil)
