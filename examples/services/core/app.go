@@ -20,17 +20,19 @@ import (
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/groups"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/notifications"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 )
 
 func main() {
 	// Instantiate an auth.Service to maintain basic auth data
 	authService := auth.Service{
-		ServiceID:     "example",
-		ServiceHost:   "http://localhost",
-		FirstParty:    true,
-		AuthBaseURL:   "http://localhost:5050/core",
-		GroupsBaseURL: "http://localhost:81/gr",
+		ServiceID:            "example",
+		ServiceHost:          "http://localhost",
+		FirstParty:           true,
+		AuthBaseURL:          "http://localhost:5050/core",
+		GroupsBaseURL:        "http://localhost/gr",
+		NotificationsBaseURL: "http://localhost/notifications",
 	}
 
 	// Instantiate a remote ServiceAccountLoader to load auth service account data from auth service
@@ -52,12 +54,17 @@ func main() {
 		log.Printf("Error initializing groups service: %v", err)
 	}
 
+	notificationsAdapter, err := notifications.NewNotificationsService(serviceAccountManager, authService.GroupsBaseURL, logger)
+	if err != nil {
+		log.Printf("Error initializing notifications service: %v", err)
+	}
+
 	// Instantiate a CoreService to utilize certain core services, such as reading deleted account IDs
 	deletedAccountsConfig := core.DeletedAccountsConfig{
 		Callback: printDeletedAccountIDs,
 	}
 
-	coreService, err := core.NewService(serviceAccountManager, &deletedAccountsConfig, groupsAdapter, logger)
+	coreService, err := core.NewService(serviceAccountManager, &deletedAccountsConfig, groupsAdapter, notificationsAdapter, logger)
 	if err != nil {
 		log.Printf("Error initializing core service: %v", err)
 	}

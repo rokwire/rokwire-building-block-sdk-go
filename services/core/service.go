@@ -23,6 +23,7 @@ import (
 
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/groups"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/notifications"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 )
@@ -33,6 +34,7 @@ type Service struct {
 
 	deletedAccountsConfig *DeletedAccountsConfig
 	GroupsAdapter         groups.GroupsAdapter
+	NotificationsAdapter  notifications.NotificationsAdapter
 
 	logger *logs.Logger
 }
@@ -115,7 +117,7 @@ func (c *Service) buildDeletedAccountsRequest() (*http.Request, error) {
 }
 
 // NewService creates and configures a new Service instance
-func NewService(serviceAccountManager *auth.ServiceAccountManager, deletedAccountsConfig *DeletedAccountsConfig, groups *groups.GroupsAdapter, logger *logs.Logger) (*Service, error) {
+func NewService(serviceAccountManager *auth.ServiceAccountManager, deletedAccountsConfig *DeletedAccountsConfig, groups *groups.GroupsAdapter, notifications *notifications.NotificationsAdapter, logger *logs.Logger) (*Service, error) {
 	if serviceAccountManager == nil {
 		return nil, errors.New("service account manager is missing")
 	}
@@ -134,7 +136,7 @@ func NewService(serviceAccountManager *auth.ServiceAccountManager, deletedAccoun
 		}
 	}
 
-	core := Service{serviceAccountManager: serviceAccountManager, deletedAccountsConfig: deletedAccountsConfig, GroupsAdapter: *groups, logger: logger}
+	core := Service{serviceAccountManager: serviceAccountManager, deletedAccountsConfig: deletedAccountsConfig, GroupsAdapter: *groups, NotificationsAdapter: *notifications, logger: logger}
 
 	return &core, nil
 }

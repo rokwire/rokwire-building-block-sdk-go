@@ -36,11 +36,13 @@ import (
 
 // Service contains the configurations needed to interface with the auth service
 type Service struct {
-	ServiceID     string // ID of implementing service
-	ServiceHost   string // Host of the implementing service
-	FirstParty    bool   // Whether the implementing service is a first party member of the ROKWIRE platform
-	AuthBaseURL   string // Base URL where auth service resources are located
-	GroupsBaseURL string // Base URL where auth service resources are located
+	ServiceID            string // ID of implementing service
+	ServiceHost          string // Host of the implementing service
+	FirstParty           bool   // Whether the implementing service is a first party member of the ROKWIRE platform
+	AuthBaseURL          string // Base URL where auth service resources are located
+	GroupsBaseURL        string // Base URL where auth service resources are located
+	NotificationsBaseURL string // Base URL where auth service resources are located
+
 }
 
 func checkAuthService(as *Service, requireBaseURL bool) error {
@@ -57,6 +59,14 @@ func checkAuthService(as *Service, requireBaseURL bool) error {
 
 	if requireBaseURL && as.AuthBaseURL == "" {
 		return errors.New("auth base URL is missing")
+	}
+
+	if as.GroupsBaseURL == "" {
+		return errors.New("groups base URL is missing")
+	}
+
+	if as.NotificationsBaseURL == "" {
+		return errors.New("notifications base URL is missing")
 	}
 
 	return nil
@@ -689,10 +699,10 @@ func (s *ServiceAccountManager) makeRequest(req *http.Request, appID string, org
 	if resp.StatusCode == http.StatusUnauthorized {
 		// unauthorized, so try refreshing tokens and try once more with a refreshed token
 		var refreshedPair *AppOrgPair
-		token, refreshedPair, newPairs, err = s.getRefreshedAccessToken(appOrgPair.AppID, appOrgPair.OrgID)
+		/*token, refreshedPair, newPairs, err = s.getRefreshedAccessToken(appOrgPair.AppID, appOrgPair.OrgID)
 		if err != nil {
 			return s.handleRequestResponse(async, false, *appOrgPair, nil, err, newPairs, rrc, pc, dc)
-		}
+		}*/
 
 		req.Body = reqBody
 		req.Header.Set("Authorization", token.String())
@@ -838,10 +848,10 @@ func NewServiceAccountManager(authService *Service, serviceAccountLoader Service
 		tokensLock: lock, maxRefreshCacheFreq: 30, client: &http.Client{}, loader: serviceAccountLoader}
 
 	// Retrieve all access tokens granted to service account
-	_, _, err = manager.GetAccessTokens()
+	/*_, _, err = manager.GetAccessTokens()
 	if err != nil {
 		return nil, fmt.Errorf("error loading access tokens: %v", err)
-	}
+	}*/
 
 	return manager, nil
 }
