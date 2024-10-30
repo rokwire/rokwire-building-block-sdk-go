@@ -15,7 +15,12 @@
 package notifications
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
@@ -28,6 +33,110 @@ type NotificationsAdapter struct {
 	notificationsBaseURL string
 
 	logger *logs.Logger
+}
+
+// NotificationMessage wrapper for internal message
+type NotificationMessage struct {
+	ID         *string                 `json:"id" bson:"id"` //optional
+	OrgID      string                  `json:"org_id" bson:"org_id"`
+	AppID      string                  `json:"app_id" bson:"app_id"`
+	Priority   int                     `json:"priority" bson:"priority"`
+	Recipients []NotificationRecipient `json:"recipients" bson:"recipients"`
+	//Topic      *string                 `json:"topic" bson:"topic"`
+	Subject string              `json:"subject" bson:"subject"`
+	Sender  *NotificationSender `json:"sender,omitempty" bson:"sender,omitempty"`
+	Body    string              `json:"body" bson:"body"`
+	Time    *int64              `json:"time,omitempty"`
+	Data    map[string]string   `json:"data" bson:"data"`
+}
+
+// NotificationRecipient recipients wrapper struct
+type NotificationRecipient struct {
+	UserID string `json:"user_id"`
+	Name   string `json:"name"`
+}
+
+// NotificationSender notification sender
+type NotificationSender struct {
+	Type string       `json:"type" bson:"type"` // user or system
+	User *CoreUserRef `json:"user,omitempty" bson:"user,omitempty"`
+}
+
+// CoreUserRef user reference that contains ExternalID & Name
+type CoreUserRef struct {
+	UserID *string `json:"user_id" bson:"user_id"`
+	Name   *string `json:"name" bson:"name"`
+}
+
+// MessageRef wrapped message response from the Notifications BB
+type MessageRef struct {
+	OrgID string `json:"org_id" bson:"org_id"`
+	AppID string `json:"app_id" bson:"app_id"`
+	ID    string `json:"id" bson:"_id"`
+}
+
+// SendNotification sends notifications to a user
+func (na *NotificationsAdapter) SendNotification(logs *logs.Logger, notification NotificationMessage) (*MessageRef, error) {
+	results, err := na.SendNotifications(logs, []NotificationMessage{notification})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(results) > 0 {
+		return &results[0], err
+	}
+
+	return nil, err
+}
+
+// SendNotifications sends notifications to a user
+func (na *NotificationsAdapter) SendNotifications(logs *logs.Logger, notifications []NotificationMessage) ([]MessageRef, error) {
+	if len(notifications) > 0 {
+		//for now
+		message1 := notifications[0]
+		appID := message1.AppID
+		orgID := message1.OrgID
+
+		url := fmt.Sprintf("%s/api/bbs/messages", na.notificationsBaseURL)
+
+		bodyBytes, err := json.Marshal(notifications)
+		if err != nil {
+			logs.Errorf("SendNotification::error creating notification request - %s", err)
+			return nil, err
+		}
+
+		req, err := http.NewRequest("POST", url, bytes.NewReader(bodyBytes))
+		if err != nil {
+			logs.Errorf("SendNotification:error creating load user data request - %s", err)
+			return nil, err
+		}
+
+		resp, err := na.serviceAccountManager.MakeRequest(req, appID, orgID)
+		if err != nil {
+			logs.Errorf("SendNotification: error sending request - %s", err)
+			return nil, err
+		}
+
+		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			errorResponse, _ := ioutil.ReadAll(resp.Body)
+			if errorResponse != nil {
+				logs.Errorf("SendNotification: error with response code - %s", errorResponse)
+			}
+			logs.Errorf("SendNotification: error with response code - %d", resp.StatusCode)
+			return nil, fmt.Errorf("SendNotification:error with response code != 200")
+		}
+		var notificationResponse []MessageRef
+		err = json.NewDecoder(resp.Body).Decode(&notificationResponse)
+		if err != nil {
+			logs.Errorf("SendNotification: error with response code - %d", resp.StatusCode)
+			return nil, fmt.Errorf("SendNotification: %s", err)
+		}
+		return notificationResponse, nil
+	}
+
+	return nil, nil
 }
 
 // NewNotificationsService creates and configures a new Service instance

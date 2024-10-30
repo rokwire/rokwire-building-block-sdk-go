@@ -30,7 +30,7 @@ func main() {
 		ServiceID:            "example",
 		ServiceHost:          "http://localhost",
 		FirstParty:           true,
-		AuthBaseURL:          "http://localhost:5050/core",
+		AuthBaseURL:          "http://localhost/core",
 		GroupsBaseURL:        "http://localhost/gr",
 		NotificationsBaseURL: "http://localhost/notifications",
 	}
