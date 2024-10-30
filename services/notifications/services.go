@@ -26,8 +26,8 @@ import (
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 )
 
-// NotificationsAdapter contains configurations and helper functions required to utilize certain core services
-type NotificationsAdapter struct {
+// NotificationAdapter contains configurations and helper functions required to utilize certain core services
+type NotificationAdapter struct {
 	serviceAccountManager *auth.ServiceAccountManager
 
 	notificationsBaseURL string
@@ -76,7 +76,7 @@ type MessageRef struct {
 }
 
 // SendNotification sends notifications to a user
-func (na *NotificationsAdapter) SendNotification(logs *logs.Logger, notification NotificationMessage) (*MessageRef, error) {
+func (na *NotificationAdapter) SendNotification(logs *logs.Logger, notification NotificationMessage) (*MessageRef, error) {
 	results, err := na.SendNotifications(logs, []NotificationMessage{notification})
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func (na *NotificationsAdapter) SendNotification(logs *logs.Logger, notification
 }
 
 // SendNotifications sends notifications to a user
-func (na *NotificationsAdapter) SendNotifications(logs *logs.Logger, notifications []NotificationMessage) ([]MessageRef, error) {
+func (na *NotificationAdapter) SendNotifications(logs *logs.Logger, notifications []NotificationMessage) ([]MessageRef, error) {
 	if len(notifications) > 0 {
 		//for now
 		message1 := notifications[0]
@@ -140,7 +140,7 @@ func (na *NotificationsAdapter) SendNotifications(logs *logs.Logger, notificatio
 }
 
 // NewNotificationsService creates and configures a new Service instance
-func NewNotificationsService(serviceAccountManager *auth.ServiceAccountManager, notificationsBaseURL string, logger *logs.Logger) (*NotificationsAdapter, error) {
+func NewNotificationsService(serviceAccountManager *auth.ServiceAccountManager, notificationsBaseURL string, logger *logs.Logger) (*NotificationAdapter, error) {
 	if serviceAccountManager == nil {
 		return nil, errors.New("service account manager is missing")
 	}
@@ -149,7 +149,7 @@ func NewNotificationsService(serviceAccountManager *auth.ServiceAccountManager, 
 		return nil, errors.New("notifications base url is missing")
 	}
 
-	groups := NotificationsAdapter{serviceAccountManager: serviceAccountManager, notificationsBaseURL: notificationsBaseURL, logger: logger}
+	groups := NotificationAdapter{serviceAccountManager: serviceAccountManager, notificationsBaseURL: notificationsBaseURL, logger: logger}
 
 	return &groups, nil
 }

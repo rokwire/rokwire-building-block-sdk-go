@@ -26,8 +26,8 @@ import (
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 )
 
-// GroupsService contains configurations and helper functions required to utilize certain core services
-type GroupsAdapter struct {
+// GroupAdapter contains configurations and helper functions required to utilize certain core services
+type GroupAdapter struct {
 	serviceAccountManager *auth.ServiceAccountManager
 
 	groupsBaseURL string
@@ -43,7 +43,7 @@ type GetGroupMembership struct {
 }
 
 // GetGroupMemberships Get aggregated title of the group and status of the member
-func (na *GroupsAdapter) GetGroupMemberships(logs logs.Logger, userID string) ([]GetGroupMembership, error) {
+func (na *GroupAdapter) GetGroupMemberships(logs logs.Logger, userID string) ([]GetGroupMembership, error) {
 	url := fmt.Sprintf("%s/api/bbs/groups/%s/memberships", na.groupsBaseURL, userID)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -85,7 +85,7 @@ func (na *GroupsAdapter) GetGroupMemberships(logs logs.Logger, userID string) ([
 }
 
 // GetGroupMembershipsByGroupID Get group memebers by groupID
-func (na *GroupsAdapter) GetGroupMembershipsByGroupID(logs logs.Logger, groupID string) ([]string, error) {
+func (na *GroupAdapter) GetGroupMembershipsByGroupID(logs logs.Logger, groupID string) ([]string, error) {
 	url := fmt.Sprintf("%s/api/bbs/groups/%s/group-memberships", na.groupsBaseURL, groupID)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -127,7 +127,7 @@ func (na *GroupsAdapter) GetGroupMembershipsByGroupID(logs logs.Logger, groupID 
 }
 
 // NewGroupsService creates and configures a new Service instance
-func NewGroupsService(serviceAccountManager *auth.ServiceAccountManager, groupsBaseURL string, logger *logs.Logger) (*GroupsAdapter, error) {
+func NewGroupsService(serviceAccountManager *auth.ServiceAccountManager, groupsBaseURL string, logger *logs.Logger) (*GroupAdapter, error) {
 	if serviceAccountManager == nil {
 		return nil, errors.New("service account manager is missing")
 	}
@@ -136,7 +136,7 @@ func NewGroupsService(serviceAccountManager *auth.ServiceAccountManager, groupsB
 		return nil, errors.New("groups base url is missing")
 	}
 
-	groups := GroupsAdapter{serviceAccountManager: serviceAccountManager, groupsBaseURL: groupsBaseURL, logger: logger}
+	groups := GroupAdapter{serviceAccountManager: serviceAccountManager, groupsBaseURL: groupsBaseURL, logger: logger}
 
 	return &groups, nil
 }
