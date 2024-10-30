@@ -840,10 +840,10 @@ func NewServiceAccountManager(authService *Service, serviceAccountLoader Service
 		tokensLock: lock, maxRefreshCacheFreq: 30, client: &http.Client{}, loader: serviceAccountLoader}
 
 	// Retrieve all access tokens granted to service account
-	/*_, _, err = manager.GetAccessTokens()
+	_, _, err = manager.GetAccessTokens()
 	if err != nil {
 		return nil, fmt.Errorf("error loading access tokens: %v", err)
-	}*/
+	}
 
 	return manager, nil
 }
