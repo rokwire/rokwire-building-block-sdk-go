@@ -61,14 +61,6 @@ func checkAuthService(as *Service, requireBaseURL bool) error {
 		return errors.New("auth base URL is missing")
 	}
 
-	if as.GroupsBaseURL == "" {
-		return errors.New("groups base URL is missing")
-	}
-
-	if as.NotificationsBaseURL == "" {
-		return errors.New("notifications base URL is missing")
-	}
-
 	return nil
 }
 
