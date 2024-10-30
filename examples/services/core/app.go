@@ -54,7 +54,7 @@ func main() {
 		log.Printf("Error initializing groups service: %v", err)
 	}
 
-	notificationsAdapter, err := notifications.NewNotificationsService(serviceAccountManager, authService.GroupsBaseURL, logger)
+	notificationsAdapter, err := notifications.NewNotificationsService(serviceAccountManager, authService.NotificationsBaseURL, logger)
 	if err != nil {
 		log.Printf("Error initializing notifications service: %v", err)
 	}
