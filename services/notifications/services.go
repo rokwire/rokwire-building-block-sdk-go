@@ -19,7 +19,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
@@ -137,6 +139,57 @@ func (na *NotificationAdapter) SendNotifications(logs *logs.Logger, notification
 	}
 
 	return nil, nil
+}
+
+// SendMail sends email to a user
+func (na *NotificationAdapter) SendMail(toEmail string, subject string, body string) error {
+	return na.sendMail(toEmail, subject, body)
+}
+
+func (na *NotificationAdapter) sendMail(toEmail string, subject string, body string) error {
+	if len(toEmail) > 0 && len(subject) > 0 && len(body) > 0 {
+		url := fmt.Sprintf("%s/api/bbs/mail", na.notificationsBaseURL)
+
+		bodyData := map[string]interface{}{
+			"to_mail": toEmail,
+			"subject": subject,
+			"body":    body,
+		}
+		bodyBytes, err := json.Marshal(bodyData)
+		if err != nil {
+			log.Printf("sendMail error creating notification request - %s", err)
+			return err
+		}
+
+		req, err := http.NewRequest("POST", url, bytes.NewReader(bodyBytes))
+		if err != nil {
+			log.Printf("sendMail error creating load user data request - %s", err)
+			return err
+		}
+
+		resp, err := na.serviceAccountManager.MakeRequest(req, "all", "all")
+		if err != nil {
+			log.Printf("sendMail: error sending request - %s", err)
+			return err
+		}
+
+		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			responseData, err := io.ReadAll(resp.Body)
+			if err != nil {
+				log.Printf("sendMail error: unable to read response json: %s", err)
+				return fmt.Errorf("sendMail error: unable to parse response json: %s", err)
+			}
+			if responseData != nil {
+				log.Printf("sendMail rror with response code - %d, response: %s", resp.StatusCode, responseData)
+			} else {
+				log.Printf("sendMail rror with response code - %d", resp.StatusCode)
+			}
+			return fmt.Errorf("sendMail error with response code != 200")
+		}
+	}
+	return nil
 }
 
 // NewNotificationsService creates and configures a new Service instance
