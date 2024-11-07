@@ -16,9 +16,13 @@ package main
 
 import (
 	"log"
+	"strings"
 
+	"github.com/rokwire/rokwire-building-block-sdk-go/internal/testutils"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/keys"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/sigauth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 )
 
@@ -31,27 +35,67 @@ func main() {
 		AuthBaseURL: "http://localhost/core",
 	}
 
+	useSignatureAuth := true // change to false to use static token auth instead
+	serviceAccountID := "exampleAccountID"
+	logger := logs.NewLogger(authService.ServiceID, nil)
+	var serviceAccountLoader *auth.RemoteServiceAccountLoaderImpl
+
 	// Instantiate a remote ServiceAccountLoader to load auth service account data from auth service
-	staticTokenAuth := auth.StaticTokenServiceAuth{ServiceToken: "exampleToken"}
-	serviceAccountLoader, err := auth.NewRemoteServiceAccountLoader(&authService, "exampleAccountID", staticTokenAuth)
-	if err != nil {
-		log.Fatalf("Error initializing remote service account loader: %v", err)
+	if useSignatureAuth {
+		// set up service registration manager and subscribe to auth service
+		serviceRegLoader, err := auth.NewRemoteServiceRegLoader(&authService, []string{"auth"})
+		if err != nil {
+			logger.Fatalf("Error initializing remote service registration loader: %v", err)
+		}
+
+		serviceRegManager, err := auth.NewServiceRegManager(&authService, serviceRegLoader, !strings.HasPrefix(authService.ServiceHost, "http://localhost"))
+		if err != nil {
+			logger.Fatalf("Error initializing service registration manager: %v", err)
+		}
+
+		// parse private key
+		privKeyRaw := strings.ReplaceAll(testutils.GetSampleRSAPrivKeyPem(), "\\n", "\n")
+		privKey, err := keys.NewPrivKey(keys.PS256, privKeyRaw)
+		if err != nil {
+			logger.Fatalf("Error parsing priv key: %v", err)
+		} else if serviceAccountID == "" {
+			logger.Fatalf("Missing service account id")
+		} else {
+			// verify private key against service registration public key
+			signatureAuth, err := sigauth.NewSignatureAuth(privKey, serviceRegManager, true, false)
+			if err != nil {
+				logger.Fatalf("Error initializing signature auth: %v", err)
+			}
+
+			// set up service account loader using signature auth
+			serviceAccountLoader, err = auth.NewRemoteServiceAccountLoader(&authService, serviceAccountID, signatureAuth)
+			if err != nil {
+				logger.Fatalf("Error initializing remote service account loader: %v", err)
+			}
+		}
+	} else {
+		// set up service account loader using static token auth
+		var err error
+		staticTokenAuth := auth.StaticTokenServiceAuth{ServiceToken: "exampleToken"}
+		serviceAccountLoader, err = auth.NewRemoteServiceAccountLoader(&authService, serviceAccountID, staticTokenAuth)
+		if err != nil {
+			logger.Fatalf("Error initializing remote service account loader: %v", err)
+		}
 	}
 
 	// Instantiate a remote ServiceAccountManager to manage service account-related data
 	serviceAccountManager, err := auth.NewServiceAccountManager(&authService, serviceAccountLoader)
 	if err != nil {
-		log.Fatalf("Error initializing service account manager: %v", err)
+		logger.Fatalf("Error initializing service account manager: %v", err)
 	}
 
 	// Instantiate a CoreService to utilize certain core services, such as reading deleted account IDs
 	deletedAccountsConfig := core.DeletedAccountsConfig{
 		Callback: printDeletedAccountIDs,
 	}
-	logger := logs.NewLogger(authService.ServiceID, nil)
 	coreService, err := core.NewService(serviceAccountManager, &deletedAccountsConfig, logger)
 	if err != nil {
-		log.Printf("Error initializing core service: %v", err)
+		logger.Fatalf("Error initializing core service: %v", err)
 	}
 
 	coreService.StartDeletedAccountsTimer()
