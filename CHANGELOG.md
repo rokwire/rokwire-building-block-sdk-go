@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- Add signature auth setup example [#14](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/14)
 - BREAKING: Add Get group membership and Send notifications [#12](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/12)
 
 ## [1.0.2] - 2024-10-09
