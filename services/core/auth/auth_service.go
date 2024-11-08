@@ -691,10 +691,10 @@ func (s *ServiceAccountManager) makeRequest(req *http.Request, appID string, org
 	if resp.StatusCode == http.StatusUnauthorized {
 		// unauthorized, so try refreshing tokens and try once more with a refreshed token
 		var refreshedPair *AppOrgPair
-		/*token, refreshedPair, newPairs, err = s.getRefreshedAccessToken(appOrgPair.AppID, appOrgPair.OrgID)
+		token, refreshedPair, newPairs, err = s.getRefreshedAccessToken(appOrgPair.AppID, appOrgPair.OrgID)
 		if err != nil {
 			return s.handleRequestResponse(async, false, *appOrgPair, nil, err, newPairs, rrc, pc, dc)
-		}*/
+		}
 
 		req.Body = reqBody
 		req.Header.Set("Authorization", token.String())
