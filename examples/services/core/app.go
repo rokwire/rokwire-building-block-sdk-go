@@ -37,8 +37,7 @@ func main() {
 
 	// Instantiate a remote ServiceAccountLoader to load auth service account data from auth service
 	staticTokenAuth := auth.StaticTokenServiceAuth{ServiceToken: "exampleToken"}
-	accountID := "9f627704-a39f-442a-ab60-44e6fd3c5e9d"
-	serviceAccountLoader, err := auth.NewRemoteServiceAccountLoader(&authService, accountID, staticTokenAuth)
+	serviceAccountLoader, err := auth.NewRemoteServiceAccountLoader(&authService, "exampleAccountID", staticTokenAuth)
 	if err != nil {
 		log.Fatalf("Error initializing remote service account loader: %v", err)
 	}
