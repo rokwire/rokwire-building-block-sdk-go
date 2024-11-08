@@ -13,3 +13,23 @@
 // limitations under the License.
 
 package groups
+
+import "fmt"
+
+func main() {
+	fmt.Println("TODO")
+	/*
+	   logger := logs.NewLogger(authService.ServiceID, nil)
+	   groupsAdapter, err := groups.NewGroupsService(serviceAccountManager, authService.GroupsBaseURL, logger)
+
+	   	if err != nil {
+	   		log.Printf("Error initializing groups service: %v", err)
+	   	}
+
+	   notificationsAdapter, err := notifications.NewNotificationsService(serviceAccountManager, authService.NotificationsBaseURL, logger)
+
+	   	if err != nil {
+	   		log.Printf("Error initializing notifications service: %v", err)
+	   	}
+	*/
+}
