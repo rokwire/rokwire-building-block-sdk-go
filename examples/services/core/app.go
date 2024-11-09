@@ -23,21 +23,31 @@ import (
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/keys"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/sigauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/envloader"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 )
 
 func main() {
+	serviceID := "social" //put the service you would like to use
+	logger := logs.NewLogger(serviceID, nil)
+	envLoader := envloader.NewEnvLoader("dev", logger)
+
+	serviceHost := envLoader.GetAndLogEnvVar("SDK_TESTER_BASE_URL", true, true)
+	authHost := envLoader.GetAndLogEnvVar("SDK_TESTER_CORE_BB_BASE_URL", true, true)
+
+	serviceAccountID := envLoader.GetAndLogEnvVar("SDK_TESTER_SERVICE_ACCOUNT_ID", true, true)
+
+	staticToken := envLoader.GetAndLogEnvVar("SDK_TESTER_STATIC_TOKEN", false, true)
+
 	// Instantiate an auth.Service to maintain basic auth data
 	authService := auth.Service{
-		ServiceID:   "example",
-		ServiceHost: "http://localhost:5000",
+		ServiceID:   serviceID,
+		ServiceHost: serviceHost,
 		FirstParty:  true,
-		AuthBaseURL: "http://localhost/core",
+		AuthBaseURL: authHost,
 	}
 
-	useSignatureAuth := true // change to false to use static token auth instead
-	serviceAccountID := "exampleAccountID"
-	logger := logs.NewLogger(authService.ServiceID, nil)
+	useSignatureAuth := false // change to false to use static token auth instead
 	var serviceAccountLoader *auth.RemoteServiceAccountLoaderImpl
 
 	// Instantiate a remote ServiceAccountLoader to load auth service account data from auth service
@@ -76,7 +86,7 @@ func main() {
 	} else {
 		// set up service account loader using static token auth
 		var err error
-		staticTokenAuth := auth.StaticTokenServiceAuth{ServiceToken: "exampleToken"}
+		staticTokenAuth := auth.StaticTokenServiceAuth{ServiceToken: staticToken}
 		serviceAccountLoader, err = auth.NewRemoteServiceAccountLoader(&authService, serviceAccountID, staticTokenAuth)
 		if err != nil {
 			logger.Fatalf("Error initializing remote service account loader: %v", err)
