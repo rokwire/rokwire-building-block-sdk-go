@@ -39,6 +39,11 @@ func main() {
 
 	staticToken := envLoader.GetAndLogEnvVar("SDK_TESTER_STATIC_TOKEN", false, true)
 
+	privKey := envLoader.GetAndLogEnvVar("SDK_TESTER_SERVICE_PRIV_KEY", false, true)
+	if len(privKey) == 0 {
+		privKey = testutils.GetSampleRSAPrivKeyPem()
+	}
+
 	// Instantiate an auth.Service to maintain basic auth data
 	authService := auth.Service{
 		ServiceID:   serviceID,
@@ -47,7 +52,7 @@ func main() {
 		AuthBaseURL: authHost,
 	}
 
-	useSignatureAuth := false // change to false to use static token auth instead
+	useSignatureAuth := true // change to false to use static token auth instead
 	var serviceAccountLoader *auth.RemoteServiceAccountLoaderImpl
 
 	// Instantiate a remote ServiceAccountLoader to load auth service account data from auth service
@@ -64,7 +69,7 @@ func main() {
 		}
 
 		// parse private key
-		privKeyRaw := strings.ReplaceAll(testutils.GetSampleRSAPrivKeyPem(), "\\n", "\n")
+		privKeyRaw := strings.ReplaceAll(privKey, "\\n", "\n")
 		privKey, err := keys.NewPrivKey(keys.PS256, privKeyRaw)
 		if err != nil {
 			logger.Fatalf("Error parsing priv key: %v", err)
@@ -72,7 +77,7 @@ func main() {
 			logger.Fatalf("Missing service account id")
 		} else {
 			// verify private key against service registration public key
-			signatureAuth, err := sigauth.NewSignatureAuth(privKey, serviceRegManager, true, false)
+			signatureAuth, err := sigauth.NewSignatureAuth(privKey, serviceRegManager, false, false)
 			if err != nil {
 				logger.Fatalf("Error initializing signature auth: %v", err)
 			}
