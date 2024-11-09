@@ -36,13 +36,10 @@ import (
 
 // Service contains the configurations needed to interface with the auth service
 type Service struct {
-	ServiceID            string // ID of implementing service
-	ServiceHost          string // Host of the implementing service
-	FirstParty           bool   // Whether the implementing service is a first party member of the ROKWIRE platform
-	AuthBaseURL          string // Base URL where auth service resources are located
-	GroupsBaseURL        string // Base URL where auth service resources are located
-	NotificationsBaseURL string // Base URL where auth service resources are located
-
+	ServiceID   string // ID of implementing service
+	ServiceHost string // Host of the implementing service
+	FirstParty  bool   // Whether the implementing service is a first party member of the ROKWIRE platform
+	AuthBaseURL string // Base URL where auth service resources are located
 }
 
 func checkAuthService(as *Service, requireBaseURL bool) error {
