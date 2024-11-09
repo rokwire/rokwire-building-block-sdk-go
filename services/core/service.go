@@ -117,7 +117,7 @@ func (c *Service) buildDeletedAccountsRequest() (*http.Request, error) {
 }
 
 // NewService creates and configures a new Service instance
-func NewService(serviceAccountManager *auth.ServiceAccountManager, deletedAccountsConfig *DeletedAccountsConfig, groups *groups.GroupAdapter, notifications *notifications.NotificationAdapter, logger *logs.Logger) (*Service, error) {
+func NewService(serviceAccountManager *auth.ServiceAccountManager, deletedAccountsConfig *DeletedAccountsConfig, logger *logs.Logger) (*Service, error) {
 	if serviceAccountManager == nil {
 		return nil, errors.New("service account manager is missing")
 	}
@@ -136,7 +136,7 @@ func NewService(serviceAccountManager *auth.ServiceAccountManager, deletedAccoun
 		}
 	}
 
-	core := Service{serviceAccountManager: serviceAccountManager, deletedAccountsConfig: deletedAccountsConfig, GroupAdapter: *groups, NotificationAdapter: *notifications, logger: logger}
+	core := Service{serviceAccountManager: serviceAccountManager, deletedAccountsConfig: deletedAccountsConfig, logger: logger}
 
 	return &core, nil
 }
