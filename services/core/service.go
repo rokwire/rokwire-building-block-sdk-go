@@ -22,8 +22,6 @@ import (
 	"time"
 
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
-	"github.com/rokwire/rokwire-building-block-sdk-go/services/groups"
-	"github.com/rokwire/rokwire-building-block-sdk-go/services/notifications"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 )
@@ -33,8 +31,6 @@ type Service struct {
 	serviceAccountManager *auth.ServiceAccountManager
 
 	deletedAccountsConfig *DeletedAccountsConfig
-	GroupAdapter          groups.GroupAdapter
-	NotificationAdapter   notifications.NotificationAdapter
 
 	logger *logs.Logger
 }
