@@ -124,4 +124,11 @@ func main() {
 		log.Printf("error getting group memberships: %v", err)
 	}
 	fmt.Println(res2)
+
+	var groupIDs = []string{"146cc93d-47dd-11ec-9416-0a58a9feac02", "38f70744-3e21-11ec-b9bd-60f81dc8eb7c"}
+	res3, err := groupsAdapter.GetGroupsGroupIDs(*logger, groupIDs)
+	if err != nil {
+		log.Printf("error getting group memberships: %v", err)
+	}
+	fmt.Println(res3)
 }
