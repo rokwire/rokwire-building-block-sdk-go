@@ -267,8 +267,8 @@ func (na *GroupAdapter) GetGroupMembershipsByGroupID(logs logs.Logger, groupID s
 	return groupMembers, nil
 }
 
-// GetGroupsGroupIDs Get groups by groupIDs
-func (na *GroupAdapter) GetGroupsGroupIDs(logs logs.Logger, groupIDs []string) ([]Group, error) {
+// FindGroups finds groups by ids
+func (na *GroupAdapter) FindGroups(logs logs.Logger, groupIDs []string) ([]Group, error) {
 	idsParam := strings.Join(groupIDs, ",")
 	url := fmt.Sprintf("%s/api/bbs/groups?group-ids=%s", na.groupsBaseURL, idsParam)
 
