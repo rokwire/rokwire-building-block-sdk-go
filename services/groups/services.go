@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
@@ -268,7 +269,8 @@ func (na *GroupAdapter) GetGroupMembershipsByGroupID(logs logs.Logger, groupID s
 
 // GetGroupsGroupIDs Get groups by groupIDs
 func (na *GroupAdapter) GetGroupsGroupIDs(logs logs.Logger, groupIDs []string) ([]Group, error) {
-	url := fmt.Sprintf("%s/api/bbs/groups?group-ids=%s", na.groupsBaseURL, groupIDs)
+	idsParam := strings.Join(groupIDs, ",")
+	url := fmt.Sprintf("%s/api/bbs/groups?group-ids=%s", na.groupsBaseURL, idsParam)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
