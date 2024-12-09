@@ -15,6 +15,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -112,6 +113,20 @@ func main() {
 	if err != nil {
 		logger.Fatalf("Error initializing core service: %v", err)
 	}
+	searchParams := map[string]interface{}{
+		"profile.first_name": "Stefan",
+	}
+	appID := "9766"
+	orgID := "0a2eff20-e2cd-11eb-af68-60f81db5ecc0"
+	limit := 0
+	offset := 0
+
+	account, err := coreService.GetUserAccounts(searchParams, &appID, &orgID, &limit, &offset)
+	if err != nil {
+		return
+	}
+	log.Printf("error getting user accounts: %v", err)
+	fmt.Print(account)
 
 	coreService.StartDeletedAccountsTimer()
 }
