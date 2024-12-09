@@ -218,19 +218,6 @@ func NewService(serviceAccountManager *auth.ServiceAccountManager, deletedAccoun
 	}
 
 	core := Service{serviceAccountManager: serviceAccountManager, deletedAccountsConfig: deletedAccountsConfig, logger: logger}
-	searchParams := map[string]interface{}{
-		"profile.first_name": "Stefan",
-	}
-	appID := "9766"
-	orgID := "0a2eff20-e2cd-11eb-af68-60f81db5ecc0"
-	limit := 0
-	offset := 0
-
-	account, err := core.GetUserAccounts(searchParams, &appID, &orgID, &limit, &offset)
-	if err != nil {
-		return nil, nil
-	}
-	fmt.Print(account)
 	return &core, nil
 }
 
