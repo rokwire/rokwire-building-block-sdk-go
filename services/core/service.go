@@ -116,7 +116,7 @@ func (c *Service) buildDeletedAccountsRequest() (*http.Request, error) {
 }
 
 // GetUserAccounts Gets user accounts
-func (c *Service) GetUserAccounts(searchParams map[string]interface{}, appID *string, orgID *string, limit *int, offset *int) ([]CoreAccountResponse, error) {
+func (c *Service) GetUserAccounts(searchParams map[string]interface{}, appID *string, orgID *string, limit *int, offset *int) ([]AccountResponse, error) {
 	if c.serviceAccountManager == nil {
 		log.Println("GetAccounts: service account manager is nil")
 		return nil, errors.New("service account manager is nil")
@@ -178,17 +178,17 @@ func (c *Service) GetUserAccounts(searchParams map[string]interface{}, appID *st
 		return nil, fmt.Errorf("GetAccounts: unable to parse json: %s", err)
 	}
 
-	var maping []CoreAccount
+	var maping []Account
 	err = json.Unmarshal(data, &maping)
 	if err != nil {
 		log.Printf("GetAccounts: unable to parse json: %s", err)
 		return nil, fmt.Errorf("GetAccounts: unable to parse json: %s", err)
 	}
 
-	var coreAccounts []CoreAccountResponse
+	var coreAccounts []AccountResponse
 	for _, ca := range maping {
 		if ca.ID != "" {
-			cat := CoreAccountResponse{ID: ca.ID, Name: ca.Profile.FirstName}
+			cat := AccountResponse{ID: ca.ID, Name: ca.Profile.FirstName}
 			coreAccounts = append(coreAccounts, cat)
 		}
 
@@ -231,9 +231,9 @@ type DeletedAccountsConfig struct {
 	timer     *time.Timer
 }
 
-// CoreAccount wraps the account structure from the Core BB
-// @name CoreAccount
-type CoreAccount struct {
+// Account wraps the account structure from the Core BB
+// @name Account
+type Account struct {
 	AuthTypes []struct {
 		Active       bool   `json:"active"`
 		AuthTypeCode string `json:"auth_type_code"`
@@ -270,9 +270,9 @@ type CoreAccount struct {
 	ID string `json:"id"`
 }
 
-// CoreAccount wraps the accountID and first name of the account
-// @name CoreAccountResponse
-type CoreAccountResponse struct {
+// AccountResponse wraps the accountID and first name of the account
+// @name AccountResponse
+type AccountResponse struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
