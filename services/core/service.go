@@ -116,7 +116,7 @@ func (c *Service) buildDeletedAccountsRequest() (*http.Request, error) {
 }
 
 // GetUserAccounts Gets user accounts
-func (c *Service) GetUserAccounts(searchParams map[string]interface{}, appID *string, orgID *string, limit *int, offset *int) ([]AccountResponse, error) {
+func (c *Service) GetUserAccounts(searchParams map[string]interface{}, appID *string, orgID *string, limit *int, offset *int) ([]Account, error) {
 	if c.serviceAccountManager == nil {
 		log.Println("GetAccounts: service account manager is nil")
 		return nil, errors.New("service account manager is nil")
@@ -178,23 +178,14 @@ func (c *Service) GetUserAccounts(searchParams map[string]interface{}, appID *st
 		return nil, fmt.Errorf("GetAccounts: unable to parse json: %s", err)
 	}
 
-	var maping []Account
-	err = json.Unmarshal(data, &maping)
+	var accounts []Account
+	err = json.Unmarshal(data, &accounts)
 	if err != nil {
 		log.Printf("GetAccounts: unable to parse json: %s", err)
 		return nil, fmt.Errorf("GetAccounts: unable to parse json: %s", err)
 	}
 
-	var coreAccounts []AccountResponse
-	for _, ca := range maping {
-		if ca.ID != "" {
-			cat := AccountResponse{ID: ca.ID, Name: ca.Profile.FirstName}
-			coreAccounts = append(coreAccounts, cat)
-		}
-
-	}
-
-	return coreAccounts, nil
+	return accounts, nil
 }
 
 // NewService creates and configures a new Service instance
@@ -267,12 +258,7 @@ type Account struct {
 		State     string `json:"state"`
 		ZipCode   string `json:"zip_code"`
 	} `json:"profile"`
-	ID string `json:"id"`
-}
-
-// AccountResponse wraps the accountID and first name of the account
-// @name AccountResponse
-type AccountResponse struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID          string            `json:"id"`
+	OrgID       string            `json:"org_id"`
+	ExternalIDs map[string]string `json:"external_ids"`
 }
