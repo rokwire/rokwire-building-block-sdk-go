@@ -259,5 +259,6 @@ type Account struct {
 		ZipCode   string `json:"zip_code"`
 	} `json:"profile"`
 	ID          string            `json:"id"`
+	OrgID       string            `json:"org_id"`
 	ExternalIDs map[string]string `json:"external_ids"`
 }
