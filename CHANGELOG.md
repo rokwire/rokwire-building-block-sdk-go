@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Fixed
 - Fix Get user account to return the whole account [#20](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/20)
+### Added
+- Add CORS support [#22](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/22)
 
 ## [1.3.0] - 2024-12-09
 ### Added
