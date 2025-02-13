@@ -31,6 +31,7 @@ import (
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/common"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/tokenauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/webauth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
@@ -88,6 +89,10 @@ type Adapter[T common.Storage] struct {
 
 	apisHandler APIsHandler[T]
 
+	// CORS policy
+	corsAllowedOrigins []string
+	corsAllowedHeaders []string
+
 	Logger *logs.Logger
 
 	// handler registration functions
@@ -126,7 +131,12 @@ func (a *Adapter[T]) Start() {
 		}
 	}
 
-	a.Logger.Fatalf("Error serving: %v", http.ListenAndServe(":"+a.port, router))
+	var handler http.Handler = router
+	if len(a.corsAllowedOrigins) > 0 {
+		// all origins will be allowed if len(a.corsAllowedOrigins) == 0
+		handler = webauth.SetupCORS(a.corsAllowedOrigins, a.corsAllowedHeaders, router)
+	}
+	a.Logger.Fatalf("Error serving: %v", http.ListenAndServe(":"+a.port, handler))
 }
 
 // routeAPIs calls registerHandler for every path specified as auto-generated in docs
@@ -183,7 +193,7 @@ func (a *Adapter[T]) serveDocUI() http.Handler {
 
 // NewWebAdapter creates new WebAdapter instance
 func NewWebAdapter[T common.Storage](port string, serviceID string, app *common.Application[T], config AdapterConfig,
-	serviceRegManager *auth.ServiceRegManager, logger *logs.Logger) Adapter[T] {
+	serviceRegManager *auth.ServiceRegManager, corsAllowedOrigins []string, corsAllowedHeaders []string, logger *logs.Logger) Adapter[T] {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 
@@ -235,7 +245,7 @@ func NewWebAdapter[T common.Storage](port string, serviceID string, app *common.
 
 	apisHandler := NewAPIsHandler(app)
 	return Adapter[T]{baseURL: config.BaseServerURL, port: port, serviceID: serviceID, cachedJSONDoc: mergedYamlDoc, docsYAMLPath: config.DocsYAMLPath,
-		Auth: auth, Paths: paths, apisHandler: apisHandler, Logger: logger}
+		Auth: auth, Paths: paths, apisHandler: apisHandler, corsAllowedOrigins: corsAllowedOrigins, corsAllowedHeaders: corsAllowedHeaders, Logger: logger}
 }
 
 func mergeDocsYAML(doc *openapi3.T, baseDoc *openapi3.T, serviceID string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string) error {

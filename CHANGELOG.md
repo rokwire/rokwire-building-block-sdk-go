@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+## [1.5.0] - 2024-02-13
+### Added
+- Add "can_send_post_reactions" [#24](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/24)
+### Fixed
+- Fix Get user account to return the whole account [#20](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/20)
+### Added
+- Add CORS support [#22](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/22)
+
+## [1.3.0] - 2024-12-09
+### Added
+- Find users from CoreBB [#18](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/18)
+
+## [1.2.0] - 2024-11-14
+### Added
+- Implement get groups by ids adapter call [#16](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/16)
+
+## [1.1.0] - 2024-11-09
+### Added
+- Add signature auth setup example [#14](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/14)
+- Add Get group membership and Send notifications [#12](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/12)
+
 ## [1.0.2] - 2024-10-09
 ### Added
 - BREAKING: Expose router for manual API definitions [#9](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/9)
@@ -25,6 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Auth library
 - Logging library
 
-[1.0.2]: https://github.com/rokwire/core-building-block/compare/v1.0.1...v1.0.2
-[1.0.1]: https://github.com/rokwire/core-building-block/compare/v1.0.0...v1.0.1
+[Unreleased]: https://github.com/rokwire/rokwire-building-block-sdk-go/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/rokwire/rokwire-building-block-sdk-go/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/rokwire/rokwire-building-block-sdk-go/compare/v1.0.2...v1.1.0
+[1.0.2]: https://github.com/rokwire/rokwire-building-block-sdk-go/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/rokwire/rokwire-building-block-sdk-go/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/rokwire/rokwire-building-block-sdk-go/tree/v1.0.0

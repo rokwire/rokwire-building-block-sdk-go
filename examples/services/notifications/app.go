@@ -20,10 +20,10 @@ import (
 	"strings"
 
 	"github.com/rokwire/rokwire-building-block-sdk-go/internal/testutils"
-	"github.com/rokwire/rokwire-building-block-sdk-go/services/core"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/keys"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/sigauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/notifications"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/envloader"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 )
@@ -105,33 +105,23 @@ func main() {
 		logger.Fatalf("Error initializing service account manager: %v", err)
 	}
 
-	// Instantiate a CoreService to utilize certain core services, such as reading deleted account IDs
-	deletedAccountsConfig := core.DeletedAccountsConfig{
-		Callback: printDeletedAccountIDs,
-	}
-	coreService, err := core.NewService(serviceAccountManager, &deletedAccountsConfig, logger)
+	//create the adapter
+	notificationsURL := envLoader.GetAndLogEnvVar("SDK_TESTER_NOTIFICATIONS_URL", true, true)
+	notificationsAdapter, err := notifications.NewNotificationsService(serviceAccountManager, notificationsURL, logger)
 	if err != nil {
-		logger.Fatalf("Error initializing core service: %v", err)
+		log.Printf("Error initializing groups service: %v", err)
 	}
-	searchParams := map[string]interface{}{
-		"profile.first_name": "Stefan",
-	}
-	appID := "9766"
-	orgID := "0a2eff20-e2cd-11eb-af68-60f81db5ecc0"
-	limit := 0
-	offset := 0
 
-	account, err := coreService.GetUserAccounts(searchParams, &appID, &orgID, &limit, &offset)
+	//test calls
+	res, err := notificationsAdapter.SendNotifications(logger, []notifications.NotificationMessage{notifications.NotificationMessage{}})
 	if err != nil {
-		return
+		log.Printf("error notifications: %v", err)
 	}
-	log.Printf("error getting user accounts: %v", err)
-	fmt.Print(account)
+	fmt.Println(res)
 
-	coreService.StartDeletedAccountsTimer()
-}
-
-func printDeletedAccountIDs(accountIDs []string) error {
-	log.Printf("Deleted account IDs: %v\n", accountIDs)
-	return nil
+	err = notificationsAdapter.SendMail("TODO", "TODO", "TODO")
+	if err != nil {
+		log.Printf("error notifications: %v", err)
+	}
+	fmt.Println(res)
 }
