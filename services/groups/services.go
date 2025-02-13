@@ -140,6 +140,7 @@ type PostPreferences struct {
 	CanSendPostToAll             bool `json:"can_send_post_to_all" bson:"can_send_post_to_all"`
 	CanSendPostReplies           bool `json:"can_send_post_replies" bson:"can_send_post_replies"`
 	CanSendPostReactions         bool `json:"can_send_post_reactions" bson:"can_send_post_reactions"`
+	CanSendPostGroupMessages     bool `json:"can_send_post_group_messages" bson:"can_send_post_group_messages"`
 } // @name PostPreferences
 
 // GroupMembership represents the membership of a user to a given group
