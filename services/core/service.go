@@ -225,7 +225,8 @@ type DeletedAccountsConfig struct {
 // Account wraps the account structure from the Core BB
 // @name Account
 type Account struct {
-	AuthTypes []struct {
+	OrgAppsMemberships []OrgAppMembership `json:"org_apps_memberships"`
+	AuthTypes          []struct {
 		Active       bool   `json:"active"`
 		AuthTypeCode string `json:"auth_type_code"`
 		AuthTypeID   string `json:"auth_type_id"`
@@ -261,4 +262,9 @@ type Account struct {
 	ID          string            `json:"id"`
 	OrgID       string            `json:"org_id"`
 	ExternalIDs map[string]string `json:"external_ids"`
+}
+
+// OrgAppMembership represents application organization membership entity
+type OrgAppMembership struct {
+	Preferences map[string]interface{} `json:"preferences"`
 }
