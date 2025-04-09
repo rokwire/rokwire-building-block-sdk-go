@@ -4,7 +4,7 @@ rokwire-building-block-sdk-go is the official Rokwire Building Block SDK for Gol
 
 ## Prerequisites
 
-* Go v1.23+
+* Go v1.24+
 * MongoDB v4.4+
 
 ## Installation
