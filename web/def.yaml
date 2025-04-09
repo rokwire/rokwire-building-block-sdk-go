@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Building Block SDK
   description: Rokwire Building Block SDK API Documentation
-  version: 1.5.1
+  version: 1.6.1
 tags:
   - name: Admin
     description: Clients administration applications APIs.

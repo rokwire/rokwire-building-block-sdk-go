@@ -4,8 +4,8 @@
 Patches for **Core Auth Library** in this repository will only be applied to the following versions:
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.5.1   | :white_check_mark: |
-| < 1.5.1 | :x:                |
+| 1.6.1   | :white_check_mark: |
+| < 1.6.1 | :x:                |
 
 ## Reporting a Bug or Vulnerability
 
