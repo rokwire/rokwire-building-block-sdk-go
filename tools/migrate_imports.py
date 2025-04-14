@@ -49,10 +49,47 @@ def process_references(content):
     
     return content
 
+def process_dockerfile_paths(content):
+    """Process Dockerfile COPY commands to update auth library paths."""
+    old_vendor_path = f'/app/vendor/{OLD_AUTH_LIBRARY_IMPORT_BASE.rstrip("/")}'
+    new_vendor_path = f'/app/vendor/{SDK_IMPORT_BASE.rstrip("/")}'
+    
+    pattern = fr'(COPY --from=\w+ )({re.escape(old_vendor_path)}\/)([^\s]+)(\s+)({re.escape(old_vendor_path)}\/)([^\s]+)'
+    
+    def replace_path(match):
+        prefix = match.group(1)
+        path1 = match.group(3)
+        spacer = match.group(4)
+        path2 = match.group(6)
+        
+        # Find the new path in AUTH_IMPORT_MAPPING
+        new_path1 = path1
+        new_path2 = path2
+        for old_prefix, new_prefix in AUTH_IMPORT_MAPPING.items():
+            if path1.startswith(old_prefix):
+                new_path1 = path1.replace(old_prefix, new_prefix, 1)
+            if path2.startswith(old_prefix):
+                new_path2 = path2.replace(old_prefix, new_prefix, 1)
+        
+        return f'{prefix}{new_vendor_path}/{new_path1}{spacer}{new_vendor_path}/{new_path2}'
+    
+    return re.sub(pattern, replace_path, content)
+
 def process_file(file_path):
-    """Process a single Go file and update its imports and references."""
+    """Process a single file and update its imports and references."""
     with open(file_path, 'r') as f:
         content = f.read()
+
+    # Handle Dockerfile specific changes
+    if file_path.endswith('Dockerfile'):
+        content = process_dockerfile_paths(content)
+        with open(file_path, 'w') as f:
+            f.write(content)
+        return
+
+    # Handle Go files
+    if not file_path.endswith('.go'):
+        return
 
     # First, process all import blocks
     import_blocks = re.finditer(r'(import\s*\()(.*?)(\))', content, re.DOTALL)
@@ -117,17 +154,17 @@ def process_file(file_path):
 def main():
     target_dir = '.'
     
-    # Process all .go files in the directory and its subdirectories
+    # Process all .go files and Dockerfiles in the directory and its subdirectories
     for root, _, files in os.walk(target_dir):
         # Skip vendor directory and its contents
         if 'vendor' in root.split(os.sep):
             continue
             
         for file in files:
-            if file.endswith('.go'):
+            if file.endswith('.go') or file == 'Dockerfile':
                 file_path = os.path.join(root, file)
                 print(f"Processing {file_path}...")
                 process_file(file_path)
 
 if __name__ == '__main__':
-    main() 
+    main()

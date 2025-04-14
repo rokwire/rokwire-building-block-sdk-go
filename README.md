@@ -60,6 +60,8 @@ For the auth library, find and replace the following imports:
 - `github.com/rokwire/core-auth-library-go/v3/coreservice` -> `github.com/rokwire/rokwire-building-block-sdk-go/services/core`
 - `github.com/rokwire/core-auth-library-go/v3/envloader` -> `github.com/rokwire/rokwire-building-block-sdk-go/utils/envloader`
 - `github.com/rokwire/core-auth-library-go/v3/authorization` -> `github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization`
+- Dockerfile
+  - `/app/vendor/github.com/rokwire/core-auth-library-go/v3/authorization` -> `/app/vendor/github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization`
 
 You will also need to find and replace the following references for the new imports:
 - `authutils.` -> `rokwireutils.`,
