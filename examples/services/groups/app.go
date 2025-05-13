@@ -131,4 +131,10 @@ func main() {
 		log.Printf("error getting group memberships: %v", err)
 	}
 	fmt.Println(res3)
+
+	res4, err := groupsAdapter.GetEventUserIDs(*logger, "36e1c29b-b3cc-454b-804c-4d917649ed2a")
+	if err != nil {
+		log.Printf("error getting event userIDs: %v", err)
+	}
+	fmt.Println(res4)
 }
