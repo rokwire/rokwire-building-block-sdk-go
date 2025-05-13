@@ -310,6 +310,48 @@ func (na *GroupAdapter) FindGroups(logs logs.Logger, groupIDs []string) ([]Group
 	return groups, nil
 }
 
+// GetEventUserIDs Get event user ids
+func (na *GroupAdapter) GetEventUserIDs(logs logs.Logger, eventID string) ([]string, error) {
+	url := fmt.Sprintf("%s/api/bbs/event/%s/aggregated-users", na.groupsBaseURL, eventID)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		logs.Errorf("GetEventUserIDs:error creating load user data request - %s", err)
+		return nil, err
+	}
+
+	resp, err := na.serviceAccountManager.MakeRequest(req, "all", "all")
+	if err != nil {
+		logs.Errorf("GetEventUserIDs: error sending request - %s", err)
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		errorResponse, _ := ioutil.ReadAll(resp.Body)
+		if errorResponse != nil {
+			logs.Errorf("GetEventUserIDs: error with response code - %s", errorResponse)
+		}
+		logs.Errorf("GetEventUserIDs: error with response code - %d", resp.StatusCode)
+		return nil, fmt.Errorf("GetEventUserIDs:error with response code != 200")
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("GetEventUserIDs: unable to read json: %s", err)
+		return nil, fmt.Errorf("GetEventUserIDs: unable to parse json: %s", err)
+	}
+
+	var userIDs []string
+	err = json.Unmarshal(data, &userIDs)
+	if err != nil {
+		log.Printf("GetEventUserIDs: unable to parse json: %s", err)
+		return nil, fmt.Errorf("GetEventUserIDs: unable to parse json: %s", err)
+	}
+
+	return userIDs, nil
+}
+
 // NewGroupsService creates and configures a new Service instance
 func NewGroupsService(serviceAccountManager *auth.ServiceAccountManager, groupsBaseURL string, logger *logs.Logger) (*GroupAdapter, error) {
 	if serviceAccountManager == nil {

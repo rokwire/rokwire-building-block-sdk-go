@@ -25,6 +25,57 @@ To update rokwire-building-block-sdk-go to the latest version, use `go get -u gi
 
 Follow the steps below to upgrade to the associated version of this library. Note that the steps for each version are cumulative, so if you are attempting to upgrade by several versions, be sure to make the changes described for each version between your current version and the latest.
 
+#### Migrating from core-auth-library and logging-library
+This SDK has incorporated all of the components included in the following libraries. These libraries have been deprecated and continuing support for the features they provided will be handled only on this SDK going forward.
+
+- https://github.com/rokwire/core-auth-library-go
+- https://github.com/rokwire/logging-library-go
+
+Although this SDK includes all of the components of these libraries, the directory structure and naming has been changed to better fit into the context of this SDK. This repository includes an [import migration script](tools/migrate_imports.py) as a tool to help apply the necessary changes to imports and references throughout your codebase to match the new structure. To use this script, ensure you have Python installed and proceed to the instructions below.
+
+To migrate any services that make use of the libraries mentioned above to the SDK, please use the following steps:
+
+##### Using the import migration script
+
+1. Ensure you are using the latest versions of `core-auth-library-go/v3` and/or `logging-library-go/v2`. If not, follow the migration guides in those libraries to upgrade before continuing.
+2. Update the `go.mod` file in your service to remove the dependencies on `core-auth-library-go` and `logging-library-go`
+3. Install the SDK, following the instructions under [Installation](#installation)
+4. Clone this repository to your machine `git clone git@github.com:rokwire/rokwire-building-block-sdk-go.git`
+5. Open a terminal in the root directory of your service repository
+6. Run the [import migration script](tools/migrate_imports.py) `python <path-to-cloned-sdk-repo>/tools/migrate_imports.py`
+7. Run `go mod tidy` and `go mod vendor`
+8. Fix any package/naming conflicts
+9. Run `make` to ensure that there are no errors
+
+##### Manual import migration
+If you cannot or prefer not to use the [import migration script](tools/migrate_imports.py), you can manually apply the necessary changes to the import paths and references. To do so, we recommend using the "find and replace" feature of your IDE to apply the following changes:
+
+For the auth library, find and replace the following imports:
+- `github.com/rokwire/core-auth-library-go/v3/tokenauth` -> `github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/tokenauth`,
+- `github.com/rokwire/core-auth-library-go/v3/webauth` -> `github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/webauth`
+- `github.com/rokwire/core-auth-library-go/v3/keys` -> `github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/keys`
+- `github.com/rokwire/core-auth-library-go/v3/sigauth` -> `github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/sigauth`
+- `github.com/rokwire/core-auth-library-go/v3/authservice` -> `github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth`
+- `github.com/rokwire/core-auth-library-go/v3/authutils` -> `github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils`
+- `github.com/rokwire/core-auth-library-go/v3/coreservice` -> `github.com/rokwire/rokwire-building-block-sdk-go/services/core`
+- `github.com/rokwire/core-auth-library-go/v3/envloader` -> `github.com/rokwire/rokwire-building-block-sdk-go/utils/envloader`
+- `github.com/rokwire/core-auth-library-go/v3/authorization` -> `github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization`
+- Dockerfile
+  - `/app/vendor/github.com/rokwire/core-auth-library-go/v3/authorization` -> `/app/vendor/github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization`
+
+You will also need to find and replace the following references for the new imports:
+- `authutils.` -> `rokwireutils.`,
+- `authservice.AuthService` -> `auth.Service`,
+- `authservice.` -> `auth.`,
+- `coreservice.` -> `core.`,
+
+For the logging library, find and replace the following imports:
+- `github.com/rokwire/logging-library-go/v2/errors` -> `github.com/rokwire/rokwire-building-block-sdk-go/utils/errors`
+- `github.com/rokwire/logging-library-go/v2/logutils` -> `github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils`
+- `github.com/rokwire/logging-library-go/v2/logs` -> `github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs`
+
+
+
 #### Unreleased
 
 #### [1.0.2](https://github.com/rokwire/rokwire-building-block-sdk-go/compare/v1.0.1...v1.0.2)
