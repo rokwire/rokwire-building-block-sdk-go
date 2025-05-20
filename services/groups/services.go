@@ -15,9 +15,11 @@
 package groups
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -183,6 +185,11 @@ type MemberAnswer struct {
 	Answer   string `json:"answer" bson:"answer"`
 } //@name MemberAnswer
 
+// EventUsersResponse represents event user ids
+type EventUsersResponse struct {
+	UserIDs []string `json:"user_ids"`
+} //@name EventUsersResponse
+
 // GetGroupMemberships Get aggregated title of the group and status of the member
 func (na *GroupAdapter) GetGroupMemberships(logs logs.Logger, userID string) ([]GetGroupMembership, error) {
 	url := fmt.Sprintf("%s/api/bbs/groups/%s/memberships", na.groupsBaseURL, userID)
@@ -311,7 +318,7 @@ func (na *GroupAdapter) FindGroups(logs logs.Logger, groupIDs []string) ([]Group
 }
 
 // GetEventUserIDs Get event user ids
-func (na *GroupAdapter) GetEventUserIDs(logs logs.Logger, eventID string) ([]string, error) {
+func (na *GroupAdapter) GetEventUserIDs(logs logs.Logger, eventID string) (*EventUsersResponse, error) {
 	url := fmt.Sprintf("%s/api/bbs/event/%s/aggregated-users", na.groupsBaseURL, eventID)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -342,7 +349,7 @@ func (na *GroupAdapter) GetEventUserIDs(logs logs.Logger, eventID string) ([]str
 		return nil, fmt.Errorf("GetEventUserIDs: unable to parse json: %s", err)
 	}
 
-	var userIDs []string
+	var userIDs *EventUsersResponse
 	err = json.Unmarshal(data, &userIDs)
 	if err != nil {
 		log.Printf("GetEventUserIDs: unable to parse json: %s", err)
@@ -350,6 +357,50 @@ func (na *GroupAdapter) GetEventUserIDs(logs logs.Logger, eventID string) ([]str
 	}
 
 	return userIDs, nil
+}
+
+// UpdateGroupDateUpdated Updates group date updated
+func (na *GroupAdapter) UpdateGroupDateUpdated(groupID string) error {
+	if groupID != "" {
+
+		url := fmt.Sprintf("%s/api/bbs/groups/%s/date-updated", na.groupsBaseURL, groupID)
+
+		bodyData := map[string]interface{}{
+			"operation": "poll_update",
+		}
+		bodyBytes, err := json.Marshal(bodyData)
+		if err != nil {
+			log.Printf("UpdateGroupDateUpdated:error creating notification request - %s", err)
+			return err
+		}
+
+		req, err := http.NewRequest("PUT", url, bytes.NewReader(bodyBytes))
+		if err != nil {
+			log.Printf("UpdateGroupDateUpdated:error creating load user data request - %s", err)
+			return err
+		}
+
+		resp, err := na.serviceAccountManager.MakeRequest(req, "all", "all")
+		if err != nil {
+			log.Printf("UpdateGroupDateUpdated: error sending request - %s", err)
+			return err
+		}
+
+		defer resp.Body.Close()
+
+		responseData, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Printf("UpdateGroupDateUpdated: unable to read response json: %s", err)
+			return fmt.Errorf("UpdateGroupDateUpdated: unable to parse response json: %s", err)
+		}
+
+		if resp.StatusCode != 200 {
+			log.Printf("UpdateGroupDateUpdated: error with response code - %d, Response: %s", resp.StatusCode, responseData)
+			return fmt.Errorf("UpdateGroupDateUpdated: error with response code != 200")
+		}
+
+	}
+	return nil
 }
 
 // NewGroupsService creates and configures a new Service instance
