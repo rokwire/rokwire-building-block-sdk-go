@@ -185,6 +185,11 @@ type MemberAnswer struct {
 	Answer   string `json:"answer" bson:"answer"`
 } //@name MemberAnswer
 
+// EventUsersResponse represents event user ids
+type EventUsersResponse struct {
+	UserIDs []string `json:"user_ids"`
+} //@name EventUsersResponse
+
 // GetGroupMemberships Get aggregated title of the group and status of the member
 func (na *GroupAdapter) GetGroupMemberships(logs logs.Logger, userID string) ([]GetGroupMembership, error) {
 	url := fmt.Sprintf("%s/api/bbs/groups/%s/memberships", na.groupsBaseURL, userID)
@@ -313,7 +318,7 @@ func (na *GroupAdapter) FindGroups(logs logs.Logger, groupIDs []string) ([]Group
 }
 
 // GetEventUserIDs Get event user ids
-func (na *GroupAdapter) GetEventUserIDs(logs logs.Logger, eventID string) ([]string, error) {
+func (na *GroupAdapter) GetEventUserIDs(logs logs.Logger, eventID string) (*EventUsersResponse, error) {
 	url := fmt.Sprintf("%s/api/bbs/event/%s/aggregated-users", na.groupsBaseURL, eventID)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -344,7 +349,7 @@ func (na *GroupAdapter) GetEventUserIDs(logs logs.Logger, eventID string) ([]str
 		return nil, fmt.Errorf("GetEventUserIDs: unable to parse json: %s", err)
 	}
 
-	var userIDs []string
+	var userIDs *EventUsersResponse
 	err = json.Unmarshal(data, &userIDs)
 	if err != nil {
 		log.Printf("GetEventUserIDs: unable to parse json: %s", err)
