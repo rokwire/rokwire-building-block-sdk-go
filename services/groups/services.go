@@ -360,13 +360,13 @@ func (na *GroupAdapter) GetEventUserIDs(logs logs.Logger, eventID string) (*Even
 }
 
 // UpdateGroupDateUpdated Updates group date updated
-func (na *GroupAdapter) UpdateGroupDateUpdated(groupID string) error {
-	if groupID != "" {
+func (na *GroupAdapter) UpdateGroupDateUpdated(groupID string, operation string) error {
+	if groupID != "" && operation != "" {
 
 		url := fmt.Sprintf("%s/api/bbs/groups/%s/date-updated", na.groupsBaseURL, groupID)
 
 		bodyData := map[string]interface{}{
-			"operation": "poll_update",
+			"operation": operation,
 		}
 		bodyBytes, err := json.Marshal(bodyData)
 		if err != nil {
@@ -399,8 +399,10 @@ func (na *GroupAdapter) UpdateGroupDateUpdated(groupID string) error {
 			return fmt.Errorf("UpdateGroupDateUpdated: error with response code != 200")
 		}
 
+		return nil
+
 	}
-	return nil
+	return fmt.Errorf("groupID or operation is empty")
 }
 
 // NewGroupsService creates and configures a new Service instance
