@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [1.8.3] - 2025-05-23
+### Added
+- Use notification message topic field [#44](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/44)
+
+## [1.8.2] - 2025-05-21
+- Fix hardcoded param in groups adapter - UpdateGroupDateUpdated api [#42](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/42)
+
 ## [1.8.1] - 2025-05-20
 ### Fixed
 - Аdd type EventUsersResponse struct [#39](https://github.com/rokwire/rokwire-building-block-sdk-go/issues/39)

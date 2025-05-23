@@ -44,12 +44,12 @@ type NotificationMessage struct {
 	AppID      string                  `json:"app_id" bson:"app_id"`
 	Priority   int                     `json:"priority" bson:"priority"`
 	Recipients []NotificationRecipient `json:"recipients" bson:"recipients"`
-	//Topic      *string                 `json:"topic" bson:"topic"`
-	Subject string              `json:"subject" bson:"subject"`
-	Sender  *NotificationSender `json:"sender,omitempty" bson:"sender,omitempty"`
-	Body    string              `json:"body" bson:"body"`
-	Time    *int64              `json:"time,omitempty"`
-	Data    map[string]string   `json:"data" bson:"data"`
+	Topic      *string                 `json:"topic" bson:"topic"`
+	Subject    string                  `json:"subject" bson:"subject"`
+	Sender     *NotificationSender     `json:"sender,omitempty" bson:"sender,omitempty"`
+	Body       string                  `json:"body" bson:"body"`
+	Time       *int64                  `json:"time,omitempty"`
+	Data       map[string]string       `json:"data" bson:"data"`
 }
 
 // NotificationRecipient recipients wrapper struct
