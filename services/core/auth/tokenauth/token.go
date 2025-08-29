@@ -165,7 +165,11 @@ func (t *TokenAuth) CheckToken(token string, purpose string) (*Claims, error) {
 		return claims, fmt.Errorf("token purpose (%s) does not match %s", claims.Purpose, purpose)
 	}
 
-	if !(rokwireutils.ContainsString(claims.Audience, t.serviceRegManager.AuthService.ServiceID) || (t.acceptRokwireTokens && rokwireutils.ContainsString(claims.Audience, AudRokwire))) {
+	aud := claims.Audience
+	if len(aud) == 1 {
+		aud = strings.Split(aud[0], ",")
+	}
+	if !(rokwireutils.ContainsString(aud, t.serviceRegManager.AuthService.ServiceID) || (t.acceptRokwireTokens && rokwireutils.ContainsString(aud, AudRokwire))) {
 		acceptAuds := t.serviceRegManager.AuthService.ServiceID
 		if t.acceptRokwireTokens {
 			acceptAuds += " or " + AudRokwire
