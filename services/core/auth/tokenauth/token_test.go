@@ -152,6 +152,30 @@ func TestTokenAuth_CheckToken(t *testing.T) {
 		t.Errorf("Error initializing valid aud token: %v", err)
 	}
 
+	// Valid audience multiple
+	validAudMultClaims := getSampleValidClaims()
+	validAudMultClaims.Audience = []string{"test,test2"}
+	validAudMultToken, err := tokenauth.GenerateSignedToken(validAudMultClaims, samplePrivKey)
+	if err != nil {
+		t.Errorf("Error initializing valid aud multiple token: %v", err)
+	}
+
+	// Valid audience rokwire
+	validAudRokwireClaims := getSampleValidClaims()
+	validAudRokwireClaims.Audience = []string{"rokwire,test2"}
+	validAudRokwireToken, err := tokenauth.GenerateSignedToken(validAudRokwireClaims, samplePrivKey)
+	if err != nil {
+		t.Errorf("Error initializing valid aud rokwire token: %v", err)
+	}
+
+	// Valid audience array
+	validAudArrayClaims := getSampleValidClaims()
+	validAudArrayClaims.Audience = []string{"test", "test2"}
+	validAudArrayToken, err := tokenauth.GenerateSignedToken(validAudArrayClaims, samplePrivKey)
+	if err != nil {
+		t.Errorf("Error initializing valid aud array token: %v", err)
+	}
+
 	// Expired
 	expiredClaims := getSampleExpiredClaims()
 	expiredToken, err := tokenauth.GenerateSignedToken(expiredClaims, samplePrivKey)
@@ -224,6 +248,9 @@ func TestTokenAuth_CheckToken(t *testing.T) {
 	}{
 		{"return claims on valid rokwire token", args{validToken, "access"}, true, nil, validClaims, false, ""},
 		{"return claims on valid aud token", args{validAudToken, "access"}, false, nil, validAudClaims, false, ""},
+		{"return claims on valid aud multiple token", args{validAudMultToken, "access"}, false, nil, validAudMultClaims, false, ""},
+		{"return claims on valid rokwire aud token", args{validAudRokwireToken, "access"}, true, nil, validAudRokwireClaims, false, ""},
+		{"return claims on valid array aud token", args{validAudArrayToken, "access"}, false, nil, validAudArrayClaims, false, ""},
 		{"return error on invalid token", args{"token", "access"}, true, nil, nil, true, "failed to parse token"},
 		{"return error on expired token", args{expiredToken, "access"}, true, nil, expiredClaims, true, "token is expired"},
 		{"return error on wrong issuer", args{invalidIssToken, "access"}, true, nil, invalidIssClaims, true, ""},
