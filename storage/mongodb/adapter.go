@@ -21,9 +21,9 @@ import (
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/common"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"golang.org/x/sync/syncmap"
 )
 
@@ -31,7 +31,7 @@ import (
 type Adapter struct {
 	db *Database
 
-	Context mongo.SessionContext
+	Context context.Context
 
 	configDataParser func(*common.Config) error
 	cachedConfigs    *syncmap.Map
@@ -63,12 +63,12 @@ func (a *Adapter) RegisterStorageListener(listener common.StorageListener) {
 }
 
 // WithContext creates a new Adapter with provided context
-func (a *Adapter) WithContext(context mongo.SessionContext) common.Storage {
+func (a *Adapter) WithContext(context context.Context) common.Storage {
 	return &Adapter{db: a.db, Context: context, cachedConfigs: a.cachedConfigs, configsLock: a.configsLock}
 }
 
 // StartSession starts a new session on the underlying MongoDB database
-func (a *Adapter) StartSession(opts ...*options.SessionOptions) (mongo.Session, error) {
+func (a *Adapter) StartSession(opts ...options.Lister[options.SessionOptions]) (*mongo.Session, error) {
 	return a.db.dbClient.StartSession(opts...)
 }
 
@@ -79,14 +79,14 @@ func (a *Adapter) NewStorageListener() StorageListener {
 
 // TransactionHandler represents an entity that is able to handle a transaction on a MongoDB database
 type TransactionHandler[T common.Storage] interface {
-	WithContext(context mongo.SessionContext) T
+	WithContext(context context.Context) T
 	StartSession(opts ...*options.SessionOptions) (mongo.Session, error)
 }
 
 // PerformTransaction performs a transaction
 func PerformTransaction[T common.Storage](th TransactionHandler[T], transaction func(storage T) error) error {
 	// transaction
-	callback := func(sessionContext mongo.SessionContext) (interface{}, error) {
+	callback := func(sessionContext context.Context) (interface{}, error) {
 		adapter := th.WithContext(sessionContext)
 
 		err := transaction(adapter)

@@ -20,10 +20,9 @@ import (
 
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/common"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 // Database represents a wrapper for a connection to a MongoDB instance
@@ -42,8 +41,7 @@ type Database struct {
 	Listeners     []common.StorageListener
 }
 
-// Collection gets a handle for a MongoDB collection with the given name configured with the given CollectionOptions
-func (d *Database) Collection(name string, opts ...*options.CollectionOptions) *mongo.Collection {
+func (d *Database) Collection(name string, opts ...options.Lister[options.CollectionOptions]) *mongo.Collection {
 	if d == nil || d.db == nil {
 		return nil
 	}
@@ -51,33 +49,31 @@ func (d *Database) Collection(name string, opts ...*options.CollectionOptions) *
 }
 
 func (d *Database) start() error {
-
 	d.Logger.Info("database -> start")
 
-	//connect to the database
-	clientOptions := options.Client().ApplyURI(d.MongoDBAuth)
-	connectContext, cancel := context.WithTimeout(context.Background(), d.MongoTimeout)
-	client, err := mongo.Connect(connectContext, clientOptions)
-	cancel()
+	// connect to the database (v2: Connect does not take context)
+	clientOptions := options.Client().
+		ApplyURI(d.MongoDBAuth).
+		SetTimeout(d.MongoTimeout)
+
+	client, err := mongo.Connect(clientOptions)
 	if err != nil {
 		return err
 	}
 
-	//ping the database
+	// ping the database (use context here)
 	pingContext, cancel := context.WithTimeout(context.Background(), d.MongoTimeout)
-	err = client.Ping(pingContext, nil)
-	cancel()
-	if err != nil {
+	defer cancel()
+
+	if err := client.Ping(pingContext, nil); err != nil {
 		return err
 	}
 
-	//assign the db, db client and the collections
-	db := client.Database(d.MongoDBName)
-	d.db = db
+	// assign the db, db client and the collections
+	d.db = client.Database(d.MongoDBName)
 	d.dbClient = client
 
-	err = d.setupConfigsCollection()
-	if err != nil {
+	if err := d.setupConfigsCollection(); err != nil {
 		return err
 	}
 
@@ -88,7 +84,11 @@ func (d *Database) setupConfigsCollection() error {
 	d.Logger.Info("setup configs collection.....")
 	configs := &CollectionWrapper{Database: d, Coll: d.db.Collection("configs")}
 
-	err := configs.AddIndex(nil, bson.D{primitive.E{Key: "type", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}}, true)
+	err := configs.AddIndex(nil, bson.D{
+		{Key: "type", Value: 1},
+		{Key: "app_id", Value: 1},
+		{Key: "org_id", Value: 1},
+	}, true)
 	if err != nil {
 		return err
 	}
@@ -105,6 +105,7 @@ func (d *Database) onDataChanged(changeDoc map[string]interface{}) {
 		return
 	}
 	d.Logger.Infof("onDataChanged: %+v\n", changeDoc)
+
 	ns := changeDoc["ns"]
 	if ns == nil {
 		return
@@ -118,7 +119,6 @@ func (d *Database) onDataChanged(changeDoc map[string]interface{}) {
 	switch coll {
 	case "configs":
 		d.Logger.Info("configs collection changed")
-
 		for _, listener := range d.Listeners {
 			go listener.OnConfigsUpdated()
 		}
