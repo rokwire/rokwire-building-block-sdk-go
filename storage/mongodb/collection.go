@@ -93,8 +93,6 @@ func (collWrapper *CollectionWrapper) ReplaceOne(ctx context.Context, filter int
 		return errors.New("replace one - res is nil")
 	}
 
-	// Only enforce "must have matched something" when NOT doing an upsert.
-	// In v2, replaceOptions are builders, so we can't reliably inspect Upsert here.
 	if res.MatchedCount == 0 && res.UpsertedCount == 0 {
 		return errors.New("replace one - no record replaced")
 	}
