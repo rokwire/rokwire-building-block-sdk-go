@@ -32,10 +32,9 @@ type CollectionWrapper struct {
 	Coll     *mongo.Collection
 }
 
-func (collWrapper *CollectionWrapper) Find(
-	ctx context.Context,
-	filter interface{},
-	result interface{},
+// Find executes a find query on the collection using the provided filter
+// and returns the matching documents.
+func (collWrapper *CollectionWrapper) Find(ctx context.Context, filter interface{}, result interface{},
 	findOptions ...options.Lister[options.FindOptions],
 ) error {
 	if ctx == nil {

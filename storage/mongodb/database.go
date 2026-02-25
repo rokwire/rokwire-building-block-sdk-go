@@ -41,6 +41,8 @@ type Database struct {
 	Listeners     []common.StorageListener
 }
 
+// Collection returns a MongoDB collection by name.
+// It returns nil if the database is not initialized.
 func (d *Database) Collection(name string, opts ...options.Lister[options.CollectionOptions]) *mongo.Collection {
 	if d == nil || d.db == nil {
 		return nil
