@@ -32,11 +32,9 @@ type CollectionWrapper struct {
 	Coll     *mongo.Collection
 }
 
-// Find executes a find query on the collection using the provided filter
-// and returns the matching documents.
+// Find performs a Find operation on the underlying MongoDB collection
 func (collWrapper *CollectionWrapper) Find(ctx context.Context, filter interface{}, result interface{},
-	findOptions ...options.Lister[options.FindOptions],
-) error {
+	findOptions ...options.Lister[options.FindOptions]) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -45,35 +43,46 @@ func (collWrapper *CollectionWrapper) Find(ctx context.Context, filter interface
 	defer cancel()
 
 	if filter == nil {
+		// Passing bson.D{} as the filter matches all documents in the collection
 		filter = bson.D{}
 	}
 
 	cur, err := collWrapper.Coll.Find(ctx, filter, findOptions...)
-	if err != nil {
-		return err
+	if err == nil {
+		err = cur.All(ctx, result)
 	}
-	return cur.All(ctx, result)
+
+	return err
 }
 
 // FindOne performs a FindOne operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) FindOne(ctx context.Context, filter interface{}, result interface{}, findOptions ...options.Lister[options.FindOneOptions],
-) error {
+func (collWrapper *CollectionWrapper) FindOne(ctx context.Context, filter interface{}, result interface{},
+	findOptions ...options.Lister[options.FindOneOptions]) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	ctx, cancel := context.WithTimeout(ctx, collWrapper.Database.MongoTimeout)
 	defer cancel()
 
+	// crash if not added!
+	if len(findOptions) == 0 {
+		findOptions = append(findOptions, options.FindOne())
+	}
+
 	singleResult := collWrapper.Coll.FindOne(ctx, filter, findOptions...)
 	if singleResult.Err() != nil {
 		return singleResult.Err()
 	}
-	return singleResult.Decode(result)
+	err := singleResult.Decode(result)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // ReplaceOne performs a ReplaceOne operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) ReplaceOne(ctx context.Context, filter interface{}, replacement interface{}, replaceOptions ...options.Lister[options.ReplaceOptions],
-) error {
+func (collWrapper *CollectionWrapper) ReplaceOne(ctx context.Context, filter interface{}, replacement interface{},
+	replaceOptions ...options.Lister[options.ReplaceOptions]) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -84,6 +93,11 @@ func (collWrapper *CollectionWrapper) ReplaceOne(ctx context.Context, filter int
 		return errors.New("replace one - input parameters cannot be nil")
 	}
 
+	// crash if not added!
+	if len(replaceOptions) == 0 {
+		replaceOptions = append(replaceOptions, options.Replace())
+	}
+
 	res, err := collWrapper.Coll.ReplaceOne(ctx, filter, replacement, replaceOptions...)
 	if err != nil {
 		return err
@@ -92,6 +106,7 @@ func (collWrapper *CollectionWrapper) ReplaceOne(ctx context.Context, filter int
 		return errors.New("replace one - res is nil")
 	}
 
+	// keep behavior: if nothing matched and nothing upserted -> no replacement
 	if res.MatchedCount == 0 && res.UpsertedCount == 0 {
 		return errors.New("replace one - no record replaced")
 	}
@@ -105,31 +120,37 @@ func (collWrapper *CollectionWrapper) InsertOne(ctx context.Context, data interf
 		ctx = context.Background()
 	}
 	ctx, cancel := context.WithTimeout(ctx, collWrapper.Database.MongoTimeout)
-	defer cancel()
 
 	ins, err := collWrapper.Coll.InsertOne(ctx, data)
+	cancel()
+
+	if err == nil {
+		return ins.InsertedID, nil
+	}
+
+	return nil, err
+}
+
+// InsertMany performs an InsertMany operation on the underlying MongoDB collection
+func (collWrapper *CollectionWrapper) InsertMany(ctx context.Context, documents []interface{},
+	opts ...options.Lister[options.InsertManyOptions]) (*mongo.InsertManyResult, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	ctx, cancel := context.WithTimeout(ctx, collWrapper.Database.MongoTimeout)
+	defer cancel()
+
+	result, err := collWrapper.Coll.InsertMany(ctx, documents, opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	return ins.InsertedID, nil
+	return result, nil
 }
 
-// InsertMany performs an InsertMany operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) InsertMany(ctx context.Context, documents []interface{}, opts ...options.Lister[options.InsertManyOptions],
-) (*mongo.InsertManyResult, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	ctx, cancel := context.WithTimeout(ctx, collWrapper.Database.MongoTimeout)
-	defer cancel()
-
-	return collWrapper.Coll.InsertMany(ctx, documents, opts...)
-}
-
-// DeleteMany performs a DeleteMany operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) DeleteMany(ctx context.Context, filter interface{}, opts ...options.Lister[options.DeleteManyOptions],
-) (*mongo.DeleteResult, error) {
+// DeleteMany performs a Delete operation on the underlying MongoDB collection
+func (collWrapper *CollectionWrapper) DeleteMany(ctx context.Context, filter interface{},
+	opts ...options.Lister[options.DeleteManyOptions]) (*mongo.DeleteResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -137,48 +158,68 @@ func (collWrapper *CollectionWrapper) DeleteMany(ctx context.Context, filter int
 	ctx, cancel := context.WithTimeout(ctx, collWrapper.Database.MongoTimeout)
 	defer cancel()
 
-	return collWrapper.Coll.DeleteMany(ctx, filter, opts...)
+	result, err := collWrapper.Coll.DeleteMany(ctx, filter, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // DeleteOne performs a DeleteOne operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) DeleteOne(ctx context.Context, filter interface{}, opts ...options.Lister[options.DeleteOneOptions],
-) (*mongo.DeleteResult, error) {
+func (collWrapper *CollectionWrapper) DeleteOne(ctx context.Context, filter interface{},
+	opts ...options.Lister[options.DeleteOneOptions]) (*mongo.DeleteResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	ctx, cancel := context.WithTimeout(ctx, collWrapper.Database.MongoTimeout)
 	defer cancel()
 
-	return collWrapper.Coll.DeleteOne(ctx, filter, opts...)
+	result, err := collWrapper.Coll.DeleteOne(ctx, filter, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // UpdateOne performs an UpdateOne operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) UpdateOne(ctx context.Context, filter interface{}, update interface{}, opts ...options.Lister[options.UpdateOneOptions],
-) (*mongo.UpdateResult, error) {
+func (collWrapper *CollectionWrapper) UpdateOne(ctx context.Context, filter interface{}, update interface{},
+	opts ...options.Lister[options.UpdateOneOptions]) (*mongo.UpdateResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	ctx, cancel := context.WithTimeout(ctx, collWrapper.Database.MongoTimeout)
 	defer cancel()
 
-	return collWrapper.Coll.UpdateOne(ctx, filter, update, opts...)
+	updateResult, err := collWrapper.Coll.UpdateOne(ctx, filter, update, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return updateResult, nil
 }
 
 // UpdateMany performs an UpdateMany operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) UpdateMany(ctx context.Context, filter interface{}, update interface{}, opts ...options.Lister[options.UpdateManyOptions],
-) (*mongo.UpdateResult, error) {
+func (collWrapper *CollectionWrapper) UpdateMany(ctx context.Context, filter interface{}, update interface{},
+	opts ...options.Lister[options.UpdateManyOptions]) (*mongo.UpdateResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	ctx, cancel := context.WithTimeout(ctx, collWrapper.Database.MongoTimeout)
 	defer cancel()
 
-	return collWrapper.Coll.UpdateMany(ctx, filter, update, opts...)
+	updateResult, err := collWrapper.Coll.UpdateMany(ctx, filter, update, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return updateResult, nil
 }
 
 // FindOneAndUpdate performs a FindOneAndUpdate operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) FindOneAndUpdate(ctx context.Context, filter interface{}, update interface{}, result interface{}, opts ...options.Lister[options.FindOneAndUpdateOptions],
-) error {
+func (collWrapper *CollectionWrapper) FindOneAndUpdate(ctx context.Context, filter interface{}, update interface{}, result interface{},
+	opts ...options.Lister[options.FindOneAndUpdateOptions]) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -189,7 +230,11 @@ func (collWrapper *CollectionWrapper) FindOneAndUpdate(ctx context.Context, filt
 	if singleResult.Err() != nil {
 		return singleResult.Err()
 	}
-	return singleResult.Decode(result)
+	err := singleResult.Decode(result)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // CountDocuments performs a CountDocuments operation on the underlying MongoDB collection
@@ -204,24 +249,30 @@ func (collWrapper *CollectionWrapper) CountDocuments(ctx context.Context, filter
 		filter = bson.D{}
 	}
 
-	return collWrapper.Coll.CountDocuments(ctx, filter)
+	count, err := collWrapper.Coll.CountDocuments(ctx, filter)
+
+	if err != nil {
+		return -1, err
+	}
+	return count, nil
 }
 
 // Aggregate performs an Aggregate operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) Aggregate(ctx context.Context, pipeline interface{}, result interface{}, ops ...options.Lister[options.AggregateOptions],
-) error {
+func (collWrapper *CollectionWrapper) Aggregate(ctx context.Context, pipeline interface{}, result interface{},
+	ops ...options.Lister[options.AggregateOptions]) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*15000)
 	defer cancel()
 
 	cursor, err := collWrapper.Coll.Aggregate(ctx, pipeline, ops...)
-	if err != nil {
-		return err
+
+	if err == nil {
+		err = cursor.All(ctx, result)
 	}
 
-	return cursor.All(ctx, result)
+	return err
 }
 
 // ListIndexes performs a ListIndexes operation on the underlying MongoDB collection
@@ -229,7 +280,7 @@ func (collWrapper *CollectionWrapper) ListIndexes(ctx context.Context, l *logs.L
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*15000)
 	defer cancel()
 
 	indexes, err := collWrapper.Coll.Indexes().List(ctx, nil)
@@ -239,7 +290,8 @@ func (collWrapper *CollectionWrapper) ListIndexes(ctx context.Context, l *logs.L
 	}
 
 	var list []bson.M
-	if err := indexes.All(ctx, &list); err != nil {
+	err = indexes.All(ctx, &list)
+	if err != nil {
 		l.Errorf("error iterating indexes list: %s", err)
 		return nil, err
 	}
@@ -251,7 +303,7 @@ func (collWrapper *CollectionWrapper) AddIndex(ctx context.Context, keys interfa
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*15000)
 	defer cancel()
 
 	index := mongo.IndexModel{Keys: keys}
@@ -261,20 +313,23 @@ func (collWrapper *CollectionWrapper) AddIndex(ctx context.Context, keys interfa
 	}
 
 	_, err := collWrapper.Coll.Indexes().CreateOne(ctx, index, nil)
+
 	return err
 }
 
 // AddIndexWithOptions performs an AddIndexWithOptions operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) AddIndexWithOptions(ctx context.Context, keys interface{}, opt *options.IndexOptionsBuilder,
-) error {
+func (collWrapper *CollectionWrapper) AddIndexWithOptions(ctx context.Context, keys interface{}, opt *options.IndexOptionsBuilder) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*15000)
 	defer cancel()
 
-	index := mongo.IndexModel{Keys: keys, Options: opt}
-	_, err := collWrapper.Coll.Indexes().CreateOne(ctx, index)
+	index := mongo.IndexModel{Keys: keys}
+	index.Options = opt
+
+	_, err := collWrapper.Coll.Indexes().CreateOne(ctx, index, nil)
+
 	return err
 }
 
@@ -283,10 +338,12 @@ func (collWrapper *CollectionWrapper) DropIndex(ctx context.Context, name string
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*15000)
 	defer cancel()
 
-	return collWrapper.Coll.Indexes().DropOne(ctx, name)
+	err := collWrapper.Coll.Indexes().DropOne(ctx, name, nil)
+
+	return err
 }
 
 // Drop performs a Drop operation on the underlying MongoDB collection
@@ -297,7 +354,11 @@ func (collWrapper *CollectionWrapper) Drop(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, collWrapper.Database.MongoTimeout)
 	defer cancel()
 
-	return collWrapper.Coll.Drop(ctx)
+	err := collWrapper.Coll.Drop(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Watch performs a Watch operation on the underlying MongoDB collection
@@ -318,7 +379,8 @@ func (collWrapper *CollectionWrapper) watch(pipeline interface{}, resumeToken bs
 		pipeline = []bson.M{}
 	}
 
-	opts := options.ChangeStream().SetFullDocument(options.UpdateLookup)
+	opts := options.ChangeStream()
+	opts.SetFullDocument(options.UpdateLookup)
 	if resumeToken != nil {
 		opts.SetResumeAfter(resumeToken)
 	}
@@ -326,7 +388,7 @@ func (collWrapper *CollectionWrapper) watch(pipeline interface{}, resumeToken bs
 	ctx := context.Background()
 	cur, err := collWrapper.Coll.Watch(ctx, pipeline, opts)
 	if err != nil {
-		time.Sleep(3 * time.Second)
+		time.Sleep(time.Second * 3)
 		return nil, fmt.Errorf("error watching: %s", err)
 	}
 	defer cur.Close(ctx)
