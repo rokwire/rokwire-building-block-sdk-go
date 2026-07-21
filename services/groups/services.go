@@ -190,6 +190,14 @@ type EventUsersResponse struct {
 	UserIDs []string `json:"user_ids"`
 } //@name EventUsersResponse
 
+// GroupMembershipInfo represents an enriched group member entry returned by the v2 group-memberships API
+type GroupMembershipInfo struct {
+	AccountID  string `json:"account_id"`
+	DateJoined string `json:"date_joined"`
+	Name       string `json:"name"`
+	Status     string `json:"status"`
+} //@name GroupMembershipInfo
+
 // GetGroupMemberships Get aggregated title of the group and status of the member
 func (na *GroupAdapter) GetGroupMemberships(logs logs.Logger, userID string) ([]GetGroupMembership, error) {
 	url := fmt.Sprintf("%s/api/bbs/groups/%s/memberships", na.groupsBaseURL, userID)
@@ -233,6 +241,9 @@ func (na *GroupAdapter) GetGroupMemberships(logs logs.Logger, userID string) ([]
 }
 
 // GetGroupMembershipsByGroupID Get group memebers by groupID
+//
+// Deprecated: use GetGroupMembershipsByGroupIDV2 instead, which calls the v2 group-memberships API
+// and returns enriched member information (account id, name, status, date joined).
 func (na *GroupAdapter) GetGroupMembershipsByGroupID(logs logs.Logger, groupID string) ([]string, error) {
 	url := fmt.Sprintf("%s/api/bbs/groups/%s/group-memberships", na.groupsBaseURL, groupID)
 
@@ -269,6 +280,51 @@ func (na *GroupAdapter) GetGroupMembershipsByGroupID(logs logs.Logger, groupID s
 	if err != nil {
 		log.Printf("GetGroupMembershipsByGroupID: unable to parse json: %s", err)
 		return nil, fmt.Errorf("GetGroupMembershipsByGroupID: unable to parse json: %s", err)
+	}
+
+	return groupMembers, nil
+}
+
+// GetGroupMembershipsByGroupIDV2 Get enriched group members by groupID, optionally filtered by status (admin, member, pending, rejected)
+func (na *GroupAdapter) GetGroupMembershipsByGroupIDV2(logs logs.Logger, groupID string, status string) ([]GroupMembershipInfo, error) {
+	url := fmt.Sprintf("%s/api/bbs/v2/groups/%s/group-memberships", na.groupsBaseURL, groupID)
+	if status != "" {
+		url = fmt.Sprintf("%s?status=%s", url, status)
+	}
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		logs.Errorf("GetGroupMembershipsByGroupIDV2:error creating load user data request - %s", err)
+		return nil, err
+	}
+
+	resp, err := na.serviceAccountManager.MakeRequest(req, "all", "all")
+	if err != nil {
+		logs.Errorf("GetGroupMembershipsByGroupIDV2: error sending request - %s", err)
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		errorResponse, _ := ioutil.ReadAll(resp.Body)
+		if errorResponse != nil {
+			logs.Errorf("GetGroupMembershipsByGroupIDV2: error with response code - %s", errorResponse)
+		}
+		logs.Errorf("GetGroupMembershipsByGroupIDV2: error with response code - %d", resp.StatusCode)
+		return nil, fmt.Errorf("GetGroupMembershipsByGroupIDV2:error with response code != 200")
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("GetGroupMembershipsByGroupIDV2: unable to read json: %s", err)
+		return nil, fmt.Errorf("GetGroupMembershipsByGroupIDV2: unable to parse json: %s", err)
+	}
+
+	var groupMembers []GroupMembershipInfo
+	err = json.Unmarshal(data, &groupMembers)
+	if err != nil {
+		log.Printf("GetGroupMembershipsByGroupIDV2: unable to parse json: %s", err)
+		return nil, fmt.Errorf("GetGroupMembershipsByGroupIDV2: unable to parse json: %s", err)
 	}
 
 	return groupMembers, nil
