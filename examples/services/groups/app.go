@@ -125,6 +125,12 @@ func main() {
 	}
 	fmt.Println(res2)
 
+	res2v2, err := groupsAdapter.GetGroupMembershipsByGroupIDV2(*logger, "3", "member")
+	if err != nil {
+		log.Printf("error getting group memberships v2: %v", err)
+	}
+	fmt.Println(res2v2)
+
 	var groupIDs = []string{"3", "4"}
 	res3, err := groupsAdapter.FindGroups(*logger, groupIDs)
 	if err != nil {
