@@ -21,8 +21,7 @@ import (
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/common"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"golang.org/x/sync/syncmap"
 )
 
@@ -153,13 +152,13 @@ func (a *Adapter) InsertConfig(config common.Config) error {
 func (a *Adapter) UpdateConfig(config common.Config) error {
 	filter := bson.M{"_id": config.ID}
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "type", Value: config.Type},
-			primitive.E{Key: "app_id", Value: config.AppID},
-			primitive.E{Key: "org_id", Value: config.OrgID},
-			primitive.E{Key: "system", Value: config.System},
-			primitive.E{Key: "data", Value: config.Data},
-			primitive.E{Key: "date_updated", Value: config.DateUpdated},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "type", Value: config.Type},
+			bson.E{Key: "app_id", Value: config.AppID},
+			bson.E{Key: "org_id", Value: config.OrgID},
+			bson.E{Key: "system", Value: config.System},
+			bson.E{Key: "data", Value: config.Data},
+			bson.E{Key: "date_updated", Value: config.DateUpdated},
 		}},
 	}
 	_, err := a.db.configs.UpdateOne(a.Context, filter, update, nil)

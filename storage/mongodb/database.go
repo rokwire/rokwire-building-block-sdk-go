@@ -20,10 +20,9 @@ import (
 
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/common"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 // Database represents a wrapper for a connection to a MongoDB instance
@@ -43,7 +42,7 @@ type Database struct {
 }
 
 // Collection gets a handle for a MongoDB collection with the given name configured with the given CollectionOptions
-func (d *Database) Collection(name string, opts ...*options.CollectionOptions) *mongo.Collection {
+func (d *Database) Collection(name string, opts ...options.Lister[options.CollectionOptions]) *mongo.Collection {
 	if d == nil || d.db == nil {
 		return nil
 	}
@@ -56,9 +55,7 @@ func (d *Database) start() error {
 
 	//connect to the database
 	clientOptions := options.Client().ApplyURI(d.MongoDBAuth)
-	connectContext, cancel := context.WithTimeout(context.Background(), d.MongoTimeout)
-	client, err := mongo.Connect(connectContext, clientOptions)
-	cancel()
+	client, err := mongo.Connect(clientOptions)
 	if err != nil {
 		return err
 	}
@@ -88,7 +85,7 @@ func (d *Database) setupConfigsCollection() error {
 	d.Logger.Info("setup configs collection.....")
 	configs := &CollectionWrapper{Database: d, Coll: d.db.Collection("configs")}
 
-	err := configs.AddIndex(nil, bson.D{primitive.E{Key: "type", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}}, true)
+	err := configs.AddIndex(nil, bson.D{bson.E{Key: "type", Value: 1}, bson.E{Key: "app_id", Value: 1}, bson.E{Key: "org_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
