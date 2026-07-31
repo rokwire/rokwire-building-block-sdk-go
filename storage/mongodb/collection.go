@@ -21,9 +21,9 @@ import (
 	"time"
 
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 // CollectionWrapper wraps a MongoDB collection with additional database settings
@@ -34,7 +34,7 @@ type CollectionWrapper struct {
 
 // Find performs a Find operation on the underlying MongoDB collection
 func (collWrapper *CollectionWrapper) Find(ctx context.Context, filter interface{}, result interface{},
-	findOptions *options.FindOptions) error {
+	findOptions *options.FindOptionsBuilder) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -57,7 +57,7 @@ func (collWrapper *CollectionWrapper) Find(ctx context.Context, filter interface
 }
 
 // FindOne performs a FindOne operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) FindOne(ctx context.Context, filter interface{}, result interface{}, findOptions *options.FindOneOptions) error {
+func (collWrapper *CollectionWrapper) FindOne(ctx context.Context, filter interface{}, result interface{}, findOptions *options.FindOneOptionsBuilder) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -80,7 +80,7 @@ func (collWrapper *CollectionWrapper) FindOne(ctx context.Context, filter interf
 }
 
 // ReplaceOne performs a ReplaceOne operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) ReplaceOne(ctx context.Context, filter interface{}, replacement interface{}, replaceOptions *options.ReplaceOptions) error {
+func (collWrapper *CollectionWrapper) ReplaceOne(ctx context.Context, filter interface{}, replacement interface{}, replaceOptions *options.ReplaceOptionsBuilder) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -101,11 +101,8 @@ func (collWrapper *CollectionWrapper) ReplaceOne(ctx context.Context, filter int
 	if res == nil {
 		return errors.New("replace one - res is nil")
 	}
-	if replaceOptions.Upsert == nil || !*replaceOptions.Upsert {
-		matchedCount := res.MatchedCount
-		if matchedCount == 0 {
-			return errors.New("replace one - no record replaced")
-		}
+	if res.MatchedCount == 0 && res.UpsertedCount == 0 {
+		return errors.New("replace one - no record replaced")
 	}
 
 	return nil
@@ -129,7 +126,7 @@ func (collWrapper *CollectionWrapper) InsertOne(ctx context.Context, data interf
 }
 
 // InsertMany performs an InsertMany operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) InsertMany(ctx context.Context, documents []interface{}, opts *options.InsertManyOptions) (*mongo.InsertManyResult, error) {
+func (collWrapper *CollectionWrapper) InsertMany(ctx context.Context, documents []interface{}, opts *options.InsertManyOptionsBuilder) (*mongo.InsertManyResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -145,7 +142,7 @@ func (collWrapper *CollectionWrapper) InsertMany(ctx context.Context, documents 
 }
 
 // DeleteMany performs a Delete operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) DeleteMany(ctx context.Context, filter interface{}, opts *options.DeleteOptions) (*mongo.DeleteResult, error) {
+func (collWrapper *CollectionWrapper) DeleteMany(ctx context.Context, filter interface{}, opts *options.DeleteManyOptionsBuilder) (*mongo.DeleteResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -162,7 +159,7 @@ func (collWrapper *CollectionWrapper) DeleteMany(ctx context.Context, filter int
 }
 
 // DeleteOne performs a DeleteOne operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) DeleteOne(ctx context.Context, filter interface{}, opts *options.DeleteOptions) (*mongo.DeleteResult, error) {
+func (collWrapper *CollectionWrapper) DeleteOne(ctx context.Context, filter interface{}, opts *options.DeleteOneOptionsBuilder) (*mongo.DeleteResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -178,7 +175,7 @@ func (collWrapper *CollectionWrapper) DeleteOne(ctx context.Context, filter inte
 }
 
 // UpdateOne performs an UpdateOne operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) UpdateOne(ctx context.Context, filter interface{}, update interface{}, opts *options.UpdateOptions) (*mongo.UpdateResult, error) {
+func (collWrapper *CollectionWrapper) UpdateOne(ctx context.Context, filter interface{}, update interface{}, opts *options.UpdateOneOptionsBuilder) (*mongo.UpdateResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -194,7 +191,7 @@ func (collWrapper *CollectionWrapper) UpdateOne(ctx context.Context, filter inte
 }
 
 // UpdateMany performs an UpdateMany operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) UpdateMany(ctx context.Context, filter interface{}, update interface{}, opts *options.UpdateOptions) (*mongo.UpdateResult, error) {
+func (collWrapper *CollectionWrapper) UpdateMany(ctx context.Context, filter interface{}, update interface{}, opts *options.UpdateManyOptionsBuilder) (*mongo.UpdateResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -210,7 +207,7 @@ func (collWrapper *CollectionWrapper) UpdateMany(ctx context.Context, filter int
 }
 
 // FindOneAndUpdate performs a FindOneAndUpdate operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) FindOneAndUpdate(ctx context.Context, filter interface{}, update interface{}, result interface{}, opts *options.FindOneAndUpdateOptions) error {
+func (collWrapper *CollectionWrapper) FindOneAndUpdate(ctx context.Context, filter interface{}, update interface{}, result interface{}, opts *options.FindOneAndUpdateOptionsBuilder) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -249,7 +246,7 @@ func (collWrapper *CollectionWrapper) CountDocuments(ctx context.Context, filter
 }
 
 // Aggregate performs an Aggregate operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) Aggregate(ctx context.Context, pipeline interface{}, result interface{}, ops *options.AggregateOptions) error {
+func (collWrapper *CollectionWrapper) Aggregate(ctx context.Context, pipeline interface{}, result interface{}, ops *options.AggregateOptionsBuilder) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -299,8 +296,7 @@ func (collWrapper *CollectionWrapper) AddIndex(ctx context.Context, keys interfa
 	index := mongo.IndexModel{Keys: keys}
 
 	if unique {
-		index.Options = options.Index()
-		index.Options.Unique = &unique
+		index.Options = options.Index().SetUnique(unique)
 	}
 
 	_, err := collWrapper.Coll.Indexes().CreateOne(ctx, index, nil)
@@ -309,7 +305,7 @@ func (collWrapper *CollectionWrapper) AddIndex(ctx context.Context, keys interfa
 }
 
 // AddIndexWithOptions performs an AddIndexWithOptions operation on the underlying MongoDB collection
-func (collWrapper *CollectionWrapper) AddIndexWithOptions(ctx context.Context, keys interface{}, opt *options.IndexOptions) error {
+func (collWrapper *CollectionWrapper) AddIndexWithOptions(ctx context.Context, keys interface{}, opt *options.IndexOptionsBuilder) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -332,7 +328,7 @@ func (collWrapper *CollectionWrapper) DropIndex(ctx context.Context, name string
 	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*15000)
 	defer cancel()
 
-	_, err := collWrapper.Coll.Indexes().DropOne(ctx, name, nil)
+	err := collWrapper.Coll.Indexes().DropOne(ctx, name, nil)
 
 	return err
 }
